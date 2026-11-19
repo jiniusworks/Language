@@ -1,0 +1,2610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>KanaSprint · かなスプリント — Japanese Level 1 (N5) Mobile App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@500;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+            jp: ['Noto Sans JP', 'sans-serif']
+          },
+          colors: {
+            washi: '#FAF7F2',
+            sumi: '#1C1917',
+            indigoInk: '#1E293B',
+            sakura: '#E11D48',
+            sakuraDark: '#BE123C',
+            sakuraLight: '#FFE4E6',
+            matcha: '#15803D',
+            matchaDark: '#166534',
+            matchaLight: '#DCFCE7',
+            yuzu: '#EAB308',
+            yuzuLight: '#FEF9C3',
+            sora: '#0284C7',
+            soraLight: '#E0F2FE'
+          },
+          boxShadow: {
+            card: '0 10px 25px -5px rgba(28, 25, 23, 0.08), 0 4px 10px -2px rgba(28, 25, 23, 0.04)',
+            float: '0 14px 28px -6px rgba(225, 29, 72, 0.28)'
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    * {
+      -webkit-tap-highlight-color: transparent;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: #FAF7F2;
+      color: #1C1917;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      overscroll-behavior-y: none;
+    }
+
+    .washi-pattern {
+      background-image: radial-gradient(rgba(28, 25, 23, 0.045) 1px, transparent 1px);
+      background-size: 18px 18px;
+    }
+
+    /* 3D Flashcard Flip */
+    .perspective-1000 {
+      perspective: 1000px;
+    }
+
+    .card-3d-inner {
+      position: relative;
+      width: 100%;
+      min-height: 324px;
+      transform-style: preserve-3d;
+      transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .card-3d-inner.is-flipped {
+      transform: rotateY(180deg);
+    }
+
+    .card-3d-face {
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+
+    .card-3d-back {
+      transform: rotateY(180deg);
+    }
+
+    .btn-press {
+      transition: transform 0.12s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .btn-press:active {
+      transform: scale(0.97);
+    }
+
+    @keyframes shakeErr {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+
+    .anim-shake {
+      animation: shakeErr 0.28s ease-in-out;
+    }
+
+    @keyframes popEnter {
+      0% { transform: scale(0.95) translateY(6px); opacity: 0; }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+
+    .anim-pop {
+      animation: popEnter 0.24s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    @keyframes floatBurst {
+      0% { transform: translate(-50%, -35%) scale(0.6); opacity: 0; }
+      28% { transform: translate(-50%, -65%) scale(1.06); opacity: 1; }
+      100% { transform: translate(-50%, -125%) scale(1.16); opacity: 0; }
+    }
+
+    .anim-burst {
+      animation: floatBurst 0.85s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    @keyframes ringExpand {
+      0% { transform: scale(0.85); opacity: 0.85; }
+      100% { transform: scale(1.55); opacity: 0; }
+    }
+
+    .anim-ring {
+      animation: ringExpand 0.75s ease-out forwards;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .card-3d-inner,
+      .btn-press,
+      .anim-shake,
+      .anim-pop,
+      .anim-burst,
+      .anim-ring {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+<body class="washi-pattern min-h-screen text-sumi antialiased selection:bg-sakuraLight selection:text-sakuraDark">
+  <!-- Main Mobile App Container -->
+  <div id="app-shell" class="max-w-md mx-auto min-h-screen flex flex-col bg-washi/95 border-x border-stone-200/70 shadow-sm relative">
+
+    <!-- Floating Toast Banner -->
+    <div id="ks-toast" role="status" aria-live="polite" class="pointer-events-none fixed top-16 left-1/2 -translate-x-1/2 z-50 px-3.5 py-2 rounded-full bg-sumi text-white text-xs font-bold shadow-lg opacity-0 transition-opacity duration-200 max-w-[90vw] truncate">
+      Ready
+    </div>
+
+    <!-- TOP HEADER -->
+    <header class="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-stone-200/80 px-3.5 pt-2.5 pb-2">
+      <div class="flex items-center justify-between gap-2">
+        <!-- Brand Title -->
+        <div class="min-w-0">
+          <div class="flex items-center gap-1.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-sakura shrink-0"></span>
+            <h1 class="text-sm font-black tracking-tight text-sumi truncate">
+              KanaSprint · <span class="font-jp text-sakura">かなスプリント</span>
+            </h1>
+          </div>
+          <p class="text-[10px] font-semibold text-stone-500 truncate">JLPT N5 Time-Bound Mastery</p>
+        </div>
+
+        <!-- XP, Streak, Revision & Mute Controls -->
+        <div class="flex items-center gap-1.5 shrink-0">
+          <div class="px-2 py-1 rounded-full bg-orange-50 text-orange-800 border border-orange-200/70 text-[10px] font-black flex items-center gap-0.5" title="Daily Streak">
+            <span>🔥</span>
+            <span id="header-streak">1d</span>
+          </div>
+
+          <button type="button" id="header-rev-badge" onclick="openRevisionDrillFromHeader()" class="px-2 py-1 rounded-full bg-soraLight text-sora border border-sora/25 text-[11px] font-extrabold flex items-center gap-1 btn-press" title="Practice Due Revision Items">
+            <span>Rev</span>
+            <span id="header-rev-count">0</span>
+          </button>
+
+          <div class="px-2.5 py-1 rounded-full bg-yuzuLight text-amber-900 border border-yuzu/40 text-[11px] font-extrabold flex items-center gap-1" title="Total XP">
+            <span>✦</span>
+            <span id="header-xp">0</span>
+            <span class="text-[9px] font-bold">XP</span>
+          </div>
+
+          <button type="button" id="btn-sound-toggle" onclick="toggleSoundFX()" class="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 border border-stone-200 flex items-center justify-center text-indigoInk btn-press" aria-label="Mute or Unmute Audio" title="Mute / Unmute Audio">
+            <svg id="svg-sound-on" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
+            </svg>
+            <svg id="svg-sound-off" class="w-4 h-4 hidden text-stone-400" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15zM17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Sprint Duration Presets & Timer Controls -->
+      <div class="mt-2 pt-2 border-t border-stone-100 flex items-center justify-between gap-1 flex-wrap">
+        <div class="flex items-center gap-1" role="group" aria-label="Sprint Duration Presets">
+          <button type="button" id="dur-btn-3m" onclick="setSprintDuration('3m')" class="px-2 py-1 rounded-lg text-[11px] font-extrabold transition-colors btn-press">3 Min</button>
+          <button type="button" id="dur-btn-5m" onclick="setSprintDuration('5m')" class="px-2 py-1 rounded-lg text-[11px] font-extrabold transition-colors btn-press">5 Min</button>
+          <button type="button" id="dur-btn-8m" onclick="setSprintDuration('8m')" class="px-2 py-1 rounded-lg text-[11px] font-extrabold transition-colors btn-press">8 Min</button>
+        </div>
+
+        <div class="flex items-center gap-1">
+          <div class="flex items-center gap-1 bg-sakuraLight text-sakuraDark px-2 py-1 rounded-full">
+            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="M12 7v5l3 2"/>
+            </svg>
+            <span id="header-timer-display" class="text-xs font-black tabular-nums">05:00</span>
+          </div>
+
+          <button type="button" id="btn-timer-start-pause" onclick="toggleTimerRunning()" class="px-2 py-1 rounded-lg bg-indigoInk hover:bg-slate-800 text-white text-[10px] font-extrabold btn-press">
+            Start
+          </button>
+          <button type="button" id="btn-timer-reset" onclick="resetTimerToSelected()" class="px-2 py-1 rounded-lg bg-stone-100 hover:bg-stone-200 text-[10px] font-extrabold text-stone-600 btn-press" title="Reset Timer">
+            Reset
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="flex-1 overflow-y-auto px-3.5 pt-3.5 pb-24 space-y-4">
+
+      <!-- =================================================================== -->
+      <!-- TAB 1: SPRINT (14-Day Roadmap + Cumulative Revision + 3-Level Drill) -->
+      <!-- =================================================================== -->
+      <section id="tab-sprint" class="space-y-4">
+        <!-- Roadmap Overview -->
+        <div id="sprint-roadmap-view" class="space-y-4 anim-pop">
+          <div class="rounded-3xl bg-gradient-to-br from-indigoInk via-slate-800 to-stone-900 text-white p-4 shadow-card">
+            <div class="flex items-center justify-between gap-2 mb-2">
+              <span class="px-2.5 py-0.5 rounded-full bg-white/15 text-yuzu text-[10px] font-extrabold uppercase tracking-wider">
+                14-Day N5 Sprint
+              </span>
+              <span id="roadmap-streak-badge" class="text-xs font-extrabold text-amber-300">
+                🔥 1d Streak
+              </span>
+            </div>
+
+            <h2 id="roadmap-next-title" class="text-lg font-black leading-snug">Day 1: Hiragana Vowels & Basic Greetings</h2>
+            <p id="roadmap-next-desc" class="text-xs text-stone-300 mt-1">
+              Build foundational kana + 3-level progressive mastery with past-chapter review.
+            </p>
+
+            <div class="mt-3">
+              <div class="flex justify-between text-[11px] font-bold text-stone-300 mb-1">
+                <span>Syllabus Progress</span>
+                <span id="roadmap-progress-label">0 / 14 Days (0%)</span>
+              </div>
+              <div class="w-full h-2.5 rounded-full bg-white/15 overflow-hidden">
+                <div id="roadmap-progress-bar" class="h-full bg-gradient-to-r from-yuzu to-sakura transition-all duration-300" style="width: 0%"></div>
+              </div>
+            </div>
+
+            <!-- Cumulative Past-Chapter & Weak Revision Toggle -->
+            <div class="mt-3.5 flex items-center justify-between gap-2 bg-white/10 rounded-2xl px-3 py-2">
+              <div class="min-w-0">
+                <p class="text-[11px] font-extrabold text-white">Include Past-Chapter & Weak Revision</p>
+                <p class="text-[10px] text-stone-300">Mixes earlier days & missed items from Day 2+</p>
+              </div>
+              <button type="button" id="toggle-rev-mix-btn" onclick="toggleRevisionMix()" class="w-11 h-6 rounded-full bg-matcha transition-colors p-0.5 shrink-0 flex items-center" aria-label="Toggle Past-Chapter and Weak Revision">
+                <span id="toggle-rev-mix-dot" class="w-5 h-5 rounded-full bg-white shadow transform translate-x-5 transition-transform"></span>
+              </button>
+            </div>
+
+            <button type="button" id="btn-launch-next-day" onclick="launchNextSprintDay()" class="mt-3.5 w-full py-3 px-4 rounded-2xl bg-sakura hover:bg-sakuraDark text-white font-extrabold text-sm shadow-float flex items-center justify-center gap-2 btn-press">
+              <span id="btn-launch-day-text">Start Day 1 Sprint</span>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- 14-Day Syllabus List -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between px-1">
+              <h3 class="text-xs font-black uppercase tracking-wider text-stone-500">14-Day N5 Syllabus</h3>
+              <span class="text-[11px] font-bold text-stone-400">Tap any day to start</span>
+            </div>
+            <div id="syllabus-day-list" class="space-y-2">
+              <!-- Populated via JS -->
+            </div>
+          </div>
+
+          <!-- Safe Progress Reset Utility -->
+          <div class="bg-white rounded-2xl border border-stone-200/80 p-3 flex items-center justify-between gap-2">
+            <div class="min-w-0">
+              <p class="text-xs font-extrabold text-indigoInk">Local Progress & Streak</p>
+              <p id="reset-confirm-hint" class="text-[10px] text-stone-500">Saved safely in browser storage</p>
+            </div>
+            <button type="button" id="btn-reset-progress" onclick="handleResetProgressClick()" class="px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-sakuraLight text-stone-600 hover:text-sakuraDark text-[11px] font-extrabold shrink-0 btn-press">
+              Reset Data
+            </button>
+          </div>
+        </div>
+
+        <!-- Active Lesson & 3-Level Progressive Mastery Drill -->
+        <div id="sprint-active-lesson-view" class="hidden space-y-3 anim-pop">
+          <div class="bg-white rounded-2xl border border-stone-200/80 p-3 shadow-card">
+            <div class="flex items-center justify-between gap-2">
+              <button type="button" id="btn-exit-lesson" onclick="exitLessonToRoadmap()" class="px-2.5 py-1 rounded-xl bg-stone-100 hover:bg-stone-200 text-xs font-extrabold text-indigoInk flex items-center gap-1 btn-press">
+                <span>← Days</span>
+              </button>
+              <span id="active-lesson-day-tag" class="text-[11px] font-black uppercase tracking-wider text-sakura">DAY 1</span>
+              <span id="active-lesson-stage-tag" class="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-stone-100 text-indigoInk">Study</span>
+            </div>
+            <h2 id="active-lesson-title" class="text-sm font-black text-sumi mt-1.5">Hiragana Vowels & Basic Greetings</h2>
+
+            <!-- 3-Level Stepper -->
+            <div class="grid grid-cols-3 gap-1.5 mt-2.5">
+              <div id="step-pill-1" class="rounded-xl px-2 py-1.5 border text-center transition-colors bg-indigoInk text-white border-indigoInk">
+                <div class="text-[10px] font-black">Lv.1 Recon</div>
+                <div id="step-acc-1" class="text-[9px] opacity-85">Guided</div>
+              </div>
+              <div id="step-pill-2" class="rounded-xl px-2 py-1.5 border text-center transition-colors bg-stone-50 text-stone-500 border-stone-200">
+                <div class="text-[10px] font-black">Lv.2 Recall</div>
+                <div id="step-acc-2" class="text-[9px] opacity-85">Active</div>
+              </div>
+              <div id="step-pill-3" class="rounded-xl px-2 py-1.5 border text-center transition-colors bg-stone-50 text-stone-500 border-stone-200">
+                <div class="text-[10px] font-black">Lv.3 Gate</div>
+                <div id="step-acc-3" class="text-[9px] opacity-85">≥75% Pass</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stage 1: Guided Study Cards -->
+          <div id="lesson-study-phase" class="bg-white rounded-3xl border border-stone-200/80 shadow-card p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <span id="lesson-card-counter" class="text-xs font-extrabold text-stone-400">Item 1 / 4</span>
+              <div class="flex items-center gap-1.5">
+                <button type="button" id="btn-lesson-clue-toggle" onclick="toggleVisualClueMode()" class="px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-yuzuLight text-amber-900 border border-yuzu/40 btn-press">
+                  Clue: ON
+                </button>
+                <button type="button" id="btn-lesson-listen" onclick="speakActiveLessonItem()" class="px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-sakuraLight text-sakuraDark btn-press">
+                  🔊 Listen
+                </button>
+              </div>
+            </div>
+
+            <div class="rounded-2xl bg-washi border border-stone-200/70 p-4 text-center space-y-2">
+              <div id="lesson-item-jp" class="font-jp font-black text-4xl text-sumi">あ</div>
+              <div id="lesson-item-romaji" class="text-sm font-extrabold text-sakura">a</div>
+              <div id="lesson-item-meaning" class="text-base font-bold text-indigoInk">Vowel "a" (father)</div>
+              <p id="lesson-item-tip" class="text-xs text-stone-600 bg-white rounded-xl px-3 py-2 border border-stone-100">
+                Looks like an apple with a leaf.
+              </p>
+
+              <div id="lesson-study-clue-box" class="pt-1 flex flex-col items-center">
+                <div id="lesson-study-clue-svg" class="w-16 h-16 rounded-2xl bg-white border border-stone-200/80 flex items-center justify-center"></div>
+                <span id="lesson-study-clue-caption" class="text-[10px] font-bold text-stone-500 mt-1">Visual Anchor</span>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2.5">
+              <button type="button" id="btn-prev-study" onclick="prevLessonStudyItem()" class="py-2.5 px-3 rounded-2xl bg-stone-100 hover:bg-stone-200 text-indigoInk font-extrabold text-xs btn-press">
+                ← Previous
+              </button>
+              <button type="button" id="btn-next-study" onclick="nextLessonStudyItem()" class="py-2.5 px-3 rounded-2xl bg-indigoInk hover:bg-slate-800 text-white font-extrabold text-xs btn-press">
+                Next Item →
+              </button>
+            </div>
+          </div>
+
+          <!-- Stage 2: 3-Level Progressive Drill -->
+          <div id="lesson-drill-phase" class="hidden bg-white rounded-3xl border border-stone-200/80 shadow-card p-4 relative overflow-hidden">
+            <!-- Celebratory Floating Burst -->
+            <div id="drill-burst" class="pointer-events-none hidden absolute top-1/3 left-1/2 z-20 anim-burst">
+              <div class="bg-matcha text-white px-4 py-2 rounded-2xl shadow-lg border-2 border-white flex items-center gap-1.5 whitespace-nowrap">
+                <span class="text-yuzu font-black">★</span>
+                <span id="drill-burst-label" class="text-xs font-black">+10 XP • Subarashii!</span>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between gap-2 mb-2">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span id="drill-level-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-indigoInk text-white">
+                  LEVEL 1: GUIDED RECOGNITION
+                </span>
+                <span id="drill-rev-badge" class="hidden px-2 py-0.5 rounded-full text-[10px] font-black bg-soraLight text-sora border border-sora/30">
+                  Revision · Day 1
+                </span>
+              </div>
+              <span id="drill-q-counter" class="text-xs font-extrabold text-stone-400">1 / 4</span>
+            </div>
+
+            <div class="rounded-2xl bg-washi border border-stone-200/70 p-4 text-center">
+              <div class="flex items-center justify-between gap-2 mb-1">
+                <button type="button" id="btn-drill-hint" onclick="toggleDrillOptionalHint()" class="hidden px-2.5 py-1 rounded-full bg-white hover:bg-yuzuLight text-[11px] font-extrabold text-amber-900 border border-stone-200 btn-press">
+                  💡 Hint
+                </button>
+                <button type="button" id="btn-drill-hear" onclick="speakCurrentDrillTarget()" class="ml-auto px-2.5 py-1 rounded-full bg-white hover:bg-sakuraLight text-xs font-extrabold text-indigoInk hover:text-sakura border border-stone-200 btn-press">
+                  🔊 Hear
+                </button>
+              </div>
+
+              <div id="drill-prompt-jp" class="font-jp font-black text-4xl text-sumi my-1">あ</div>
+              <div id="drill-prompt-sub" class="text-xs font-bold text-stone-500">Romaji hint: a</div>
+
+              <!-- Optional Hint Box for Level 2 / Level 3 -->
+              <div id="drill-optional-hint-box" class="hidden mt-2 text-[11px] font-bold text-indigoInk bg-white rounded-xl px-3 py-1.5 border border-stone-200">
+                Romaji: <span id="drill-optional-hint-val" class="text-sakura font-black">a</span>
+              </div>
+
+              <!-- Level 1 Guided Visual SVG Clue (always hidden in Level 2 & Level 3) -->
+              <div id="drill-guided-clue" class="mt-3 pt-2.5 border-t border-stone-200/70 flex items-center justify-center gap-2.5">
+                <div id="drill-guided-svg" class="w-11 h-11 rounded-xl bg-white border border-stone-200 flex items-center justify-center shrink-0"></div>
+                <p id="drill-guided-text" class="text-xs font-bold text-amber-900 text-left">Apple hook</p>
+              </div>
+            </div>
+
+            <div id="drill-choices" class="grid grid-cols-1 gap-2 mt-3">
+              <!-- Populated by JS -->
+            </div>
+
+            <!-- Celebratory Appreciation Banner on Correct Answer -->
+            <div id="drill-appreciation-box" class="hidden mt-3 rounded-2xl bg-gradient-to-r from-matchaLight to-emerald-50 border border-matcha/30 p-3 anim-pop">
+              <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2 min-w-0">
+                  <div class="relative w-7 h-7 rounded-xl bg-matcha text-white flex items-center justify-center shrink-0">
+                    <span class="absolute inset-0 rounded-xl bg-matcha/40 anim-ring"></span>
+                    <span class="text-xs font-black relative z-10">✓</span>
+                  </div>
+                  <div class="min-w-0">
+                    <p id="drill-appreciation-title" class="text-xs font-black text-matchaDark truncate">Subarashii! Correct</p>
+                    <p id="drill-appreciation-meta" class="text-[10px] font-bold text-stone-600 truncate">Level accuracy updated</p>
+                  </div>
+                </div>
+                <span id="drill-streak-badge" class="px-2 py-0.5 rounded-full bg-white text-amber-900 border border-yuzu/40 text-[10px] font-black shrink-0">
+                  🔥 1 Streak
+                </span>
+              </div>
+            </div>
+
+            <p id="drill-status-msg" class="hidden mt-2.5 text-xs font-extrabold px-3 py-2 rounded-xl text-center"></p>
+          </div>
+
+          <!-- Stage 3: Level Gate Summary -->
+          <div id="lesson-summary-phase" class="hidden bg-white rounded-3xl border border-stone-200/80 shadow-card p-5 text-center space-y-3 anim-pop">
+            <div id="summary-icon" class="w-14 h-14 mx-auto rounded-2xl bg-matchaLight text-matcha flex items-center justify-center text-2xl font-black">
+              ★
+            </div>
+            <h3 id="summary-heading" class="text-lg font-black text-sumi">Day Complete!</h3>
+            <p id="summary-detail" class="text-xs text-stone-600">
+              You cleared all 3 progressive levels and earned bonus sprint XP.
+            </p>
+
+            <div class="grid grid-cols-3 gap-2 text-center bg-washi rounded-2xl p-3 border border-stone-200/70">
+              <div>
+                <div id="sum-acc-1" class="text-sm font-black text-indigoInk">100%</div>
+                <div class="text-[10px] font-bold text-stone-500">Lv.1 Recon</div>
+              </div>
+              <div>
+                <div id="sum-acc-2" class="text-sm font-black text-indigoInk">100%</div>
+                <div class="text-[10px] font-bold text-stone-500">Lv.2 Recall</div>
+              </div>
+              <div>
+                <div id="sum-acc-3" class="text-sm font-black text-matcha">100%</div>
+                <div class="text-[10px] font-bold text-stone-500">Lv.3 Gate</div>
+              </div>
+            </div>
+
+            <div id="summary-actions" class="space-y-2 pt-1">
+              <button type="button" id="btn-summary-primary" onclick="continueToNextDayOrRoadmap()" class="w-full py-3 rounded-2xl bg-matcha hover:bg-matchaDark text-white font-extrabold text-sm btn-press">
+                Continue 14-Day Roadmap →
+              </button>
+              <button type="button" id="btn-summary-retry" onclick="retryCurrentLessonDrill()" class="w-full py-2.5 rounded-2xl bg-stone-100 hover:bg-stone-200 text-indigoInk font-extrabold text-xs btn-press">
+                Retry 3-Level Drill
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================================================================== -->
+      <!-- TAB 2: CARDS (3D Flip Flashcards + Visual Clue + Stroke + Audio)   -->
+      <!-- =================================================================== -->
+      <section id="tab-cards" class="hidden space-y-3.5 anim-pop">
+        <!-- Deck/Day Filter & Visual Toggles -->
+        <div class="bg-white rounded-2xl border border-stone-200/80 p-3 shadow-card space-y-2.5">
+          <div class="flex items-center justify-between gap-2">
+            <label for="card-deck-select" class="text-xs font-black text-indigoInk">Category / Day Deck</label>
+            <div class="flex items-center gap-1.5">
+              <button type="button" id="btn-toggle-romaji" onclick="toggleRomajiCards()" class="px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-soraLight text-sora border border-sora/25 btn-press">
+                Romaji: ON
+              </button>
+              <button type="button" id="btn-toggle-card-clue" onclick="toggleVisualClueMode()" class="px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-yuzuLight text-amber-900 border border-yuzu/40 btn-press">
+                Clue: ON
+              </button>
+            </div>
+          </div>
+
+          <select id="card-deck-select" onchange="changeFlashcardDeck(this.value)" class="w-full rounded-xl border border-stone-200 bg-washi px-3 py-2 text-xs font-extrabold text-sumi focus:outline-none focus:border-sakura">
+            <!-- Populated via JS -->
+          </select>
+        </div>
+
+        <!-- 3D Flashcard -->
+        <div class="perspective-1000 relative">
+          <!-- Celebratory Burst on Flashcard -->
+          <div id="fc-burst" class="pointer-events-none hidden absolute top-1/3 left-1/2 z-20 anim-burst">
+            <div class="bg-matcha text-white px-4 py-2 rounded-2xl shadow-lg border-2 border-white flex items-center gap-1.5 whitespace-nowrap">
+              <span class="text-yuzu font-black">✦</span>
+              <span id="fc-burst-label" class="text-xs font-black">+5 XP • Oboeta!</span>
+            </div>
+          </div>
+
+          <div id="fc-3d-inner" onclick="flipFlashcard()" class="card-3d-inner cursor-pointer">
+            <!-- Front Face -->
+            <div class="card-3d-face bg-white rounded-3xl border border-stone-200/80 shadow-card p-5 flex flex-col justify-between min-h-[324px]">
+              <div class="flex items-center justify-between gap-2">
+                <span id="fc-day-tag" class="px-2.5 py-0.5 rounded-full bg-sakuraLight text-sakuraDark text-[10px] font-black">
+                  DAY 1
+                </span>
+                <div class="flex items-center gap-1.5" onclick="event.stopPropagation()">
+                  <button type="button" id="btn-fc-stroke" onclick="toggleFlashcardStroke()" class="px-2.5 py-1 rounded-full bg-stone-100 hover:bg-stone-200 text-[11px] font-extrabold text-indigoInk btn-press">
+                    Stroke Guide
+                  </button>
+                  <button type="button" id="btn-fc-speak" onclick="speakCurrentFlashcard()" class="w-8 h-8 rounded-full bg-sakuraLight hover:bg-sakura text-sakuraDark hover:text-white flex items-center justify-center transition-colors btn-press" aria-label="Pronounce Card">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Character + Stroke Guide Overlay -->
+              <div class="relative my-2 flex flex-col items-center justify-center">
+                <div id="fc-jp" class="font-jp font-black text-6xl text-sumi select-none">あ</div>
+                <svg id="fc-stroke-svg" class="hidden w-28 h-28 -mt-24 pointer-events-none" viewBox="0 0 100 100">
+                  <rect x="10" y="10" width="80" height="80" rx="12" fill="none" stroke="#E11D48" stroke-dasharray="4 4" stroke-width="1.5" opacity="0.55"/>
+                  <line x1="50" y1="10" x2="50" y2="90" stroke="#A8A29E" stroke-dasharray="2 3" stroke-width="1" opacity="0.45"/>
+                  <line x1="10" y1="50" x2="90" y2="50" stroke="#A8A29E" stroke-dasharray="2 3" stroke-width="1" opacity="0.45"/>
+                  <path d="M22 28 H76" stroke="#E11D48" stroke-width="3.5" stroke-linecap="round" fill="none" opacity="0.88"/>
+                  <path d="M52 16 V76 C52 84 34 84 32 72 C30 60 66 44 76 58 C82 67 74 80 62 78" stroke="#0284C7" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.82"/>
+                  <circle cx="22" cy="28" r="4" fill="#E11D48"/>
+                  <circle cx="52" cy="16" r="4" fill="#0284C7"/>
+                </svg>
+                <div id="fc-romaji" class="mt-2 text-base font-extrabold text-sakura">a</div>
+              </div>
+
+              <!-- Toggleable Inline SVG Visual Clue -->
+              <div id="fc-visual-clue-wrap" class="bg-yuzuLight/70 border border-yuzu/40 rounded-2xl p-2.5 flex items-center gap-3">
+                <div id="fc-clue-svg" class="w-11 h-11 rounded-xl bg-white border border-stone-200/80 flex items-center justify-center shrink-0"></div>
+                <div class="min-w-0 text-left">
+                  <div class="text-[10px] font-black uppercase tracking-wider text-amber-800">Visual Clue</div>
+                  <div id="fc-clue-label" class="text-xs font-bold text-sumi truncate">Apple shape mnemonic</div>
+                </div>
+              </div>
+
+              <p class="text-center text-[11px] font-bold text-stone-400 mt-2">Tap card to flip for meaning & tip →</p>
+            </div>
+
+            <!-- Back Face -->
+            <div class="card-3d-face card-3d-back bg-gradient-to-br from-indigoInk to-slate-800 text-white rounded-3xl shadow-card p-5 flex flex-col justify-between min-h-[324px]">
+              <div class="flex items-center justify-between">
+                <span class="px-2.5 py-0.5 rounded-full bg-white/15 text-yuzu text-[10px] font-black">MEANING & HOOK</span>
+                <span id="fc-back-jp" class="font-jp font-black text-xl">あ</span>
+              </div>
+
+              <div class="my-auto text-center space-y-2.5 py-3">
+                <div id="fc-meaning" class="text-2xl font-black text-white">Vowel "a"</div>
+                <div id="fc-back-romaji" class="text-xs font-extrabold text-yuzu uppercase tracking-wider">Romaji: a</div>
+                <p id="fc-tip" class="text-xs text-stone-200 bg-white/10 rounded-2xl p-3 leading-relaxed">
+                  Pronounced like "a" in "father".
+                </p>
+              </div>
+
+              <p class="text-center text-[11px] font-bold text-stone-300">Tap card to flip back</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Celebratory Appreciation Banner for Cards -->
+        <div id="fc-appreciation-box" class="hidden rounded-2xl bg-gradient-to-r from-matchaLight to-emerald-50 border border-matcha/30 px-3 py-2 flex items-center justify-between anim-pop">
+          <span id="fc-appreciation-msg" class="text-xs font-black text-matchaDark">Subarashii! Card mastered (+5 XP)</span>
+          <span id="fc-mastery-streak" class="px-2 py-0.5 rounded-full bg-white text-matchaDark text-[10px] font-black border border-matcha/25">🔥 1</span>
+        </div>
+
+        <!-- Needs Review & Got It Actions -->
+        <div class="grid grid-cols-2 gap-2.5">
+          <button type="button" id="btn-fc-review" onclick="markCurrentFlashcard('review')" class="py-2.5 px-3 rounded-2xl bg-soraLight hover:bg-sky-100 text-sora border border-sora/25 font-extrabold text-xs btn-press">
+            ↺ Needs Review
+          </button>
+          <button type="button" id="btn-fc-gotit" onclick="markCurrentFlashcard('gotit')" class="py-2.5 px-3 rounded-2xl bg-matchaLight hover:bg-green-200 text-matchaDark border border-matcha/25 font-extrabold text-xs btn-press">
+            ✓ Got It (+5 XP)
+          </button>
+        </div>
+
+        <!-- Flashcard Navigation -->
+        <div class="flex items-center justify-between gap-2">
+          <button type="button" id="btn-fc-prev" onclick="prevFlashcard()" class="flex-1 py-3 rounded-2xl bg-white border border-stone-200 hover:bg-stone-50 text-indigoInk font-extrabold text-xs btn-press">
+            ← Prev
+          </button>
+          <span id="fc-index-label" class="px-3 text-xs font-black text-stone-500 tabular-nums">1 / 56</span>
+          <button type="button" id="btn-fc-next" onclick="nextFlashcard()" class="flex-1 py-3 rounded-2xl bg-indigoInk hover:bg-slate-800 text-white font-extrabold text-xs btn-press">
+            Next →
+          </button>
+        </div>
+      </section>
+
+      <!-- =================================================================== -->
+      <!-- TAB 3: BLITZ (60s Timed Quiz + Deck Filter + Combo + Visual Clue)   -->
+      <!-- =================================================================== -->
+      <section id="tab-blitz" class="hidden space-y-3.5 anim-pop">
+        <!-- Blitz Lobby -->
+        <div id="blitz-lobby" class="bg-white rounded-3xl border border-stone-200/80 shadow-card p-5 text-center space-y-3.5">
+          <span class="inline-block px-3 py-1 rounded-full bg-sakuraLight text-sakuraDark text-[11px] font-black uppercase tracking-wider">
+            60-Second Challenge
+          </span>
+          <h2 class="text-xl font-black text-sumi">Lightning Kana & N5 Blitz</h2>
+          <p class="text-xs text-stone-600 leading-relaxed">
+            Pick a deck and answer before 60 seconds run out! Build combos up to <strong class="text-sakura">4x</strong>, open a visual clue helper when needed, and celebrate streaks.
+          </p>
+
+          <div class="text-left">
+            <label for="blitz-deck-select" class="block text-[10px] font-black uppercase tracking-wider text-stone-500 mb-1">
+              Challenge Deck
+            </label>
+            <select id="blitz-deck-select" onchange="setBlitzDeck(this.value)" class="w-full rounded-xl border border-stone-200 bg-washi px-3 py-2 text-xs font-extrabold text-sumi focus:outline-none focus:border-sakura">
+              <option value="mixed" selected>Mixed (All N5)</option>
+              <option value="hiragana">Hiragana (Kana & Basics)</option>
+              <option value="katakana">Katakana (Loanwords & Scripts)</option>
+              <option value="phrases">Phrases (Survival & Everyday)</option>
+            </select>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2.5 bg-washi rounded-2xl p-3 border border-stone-200/70">
+            <div>
+              <div id="blitz-best-score-val" class="text-lg font-black text-indigoInk">0</div>
+              <div class="text-[10px] font-bold text-stone-500">Best Score</div>
+            </div>
+            <div>
+              <div id="blitz-best-combo-val" class="text-lg font-black text-sakura">1x</div>
+              <div class="text-[10px] font-bold text-stone-500">Best Combo</div>
+            </div>
+          </div>
+
+          <button type="button" id="btn-start-blitz" onclick="startBlitzGame()" class="w-full py-3.5 rounded-2xl bg-sakura hover:bg-sakuraDark text-white font-black text-sm shadow-float btn-press">
+            ⚡ Start 60s Blitz
+          </button>
+        </div>
+
+        <!-- Blitz Active Arena -->
+        <div id="blitz-arena" class="hidden space-y-3">
+          <div class="bg-white rounded-2xl border border-stone-200/80 p-3 shadow-card flex items-center justify-between gap-2">
+            <div>
+              <div class="text-[10px] font-bold text-stone-400 uppercase">Time</div>
+              <div id="blitz-time-left" class="text-base font-black text-sakura tabular-nums">60s</div>
+            </div>
+            <div class="text-center">
+              <div class="text-[10px] font-bold text-stone-400 uppercase">Combo</div>
+              <div id="blitz-combo-badge" class="text-base font-black text-amber-600">1x</div>
+            </div>
+            <div class="text-right">
+              <div class="text-[10px] font-bold text-stone-400 uppercase">Score</div>
+              <div id="blitz-score-val" class="text-base font-black text-indigoInk tabular-nums">0</div>
+            </div>
+          </div>
+
+          <div id="blitz-question-card" class="bg-white rounded-3xl border-2 border-stone-200/80 shadow-card p-4 text-center relative overflow-hidden">
+            <!-- Burst Overlay -->
+            <div id="blitz-burst" class="pointer-events-none hidden absolute top-1/3 left-1/2 z-20 anim-burst">
+              <div class="bg-gradient-to-r from-matcha to-emerald-600 text-white px-4 py-2 rounded-2xl shadow-lg border-2 border-white flex items-center gap-1.5 whitespace-nowrap">
+                <span class="text-yuzu font-black">⚡</span>
+                <span id="blitz-burst-text" class="text-xs font-black">+10 pts • 2x!</span>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between gap-2 mb-2">
+              <span id="blitz-q-counter" class="text-[11px] font-extrabold text-stone-400">Q1 • Meaning</span>
+              <div class="flex items-center gap-1.5">
+                <button type="button" id="btn-blitz-audio" onclick="speakBlitzPrompt()" class="px-2.5 py-1 rounded-full bg-stone-100 hover:bg-sakuraLight text-xs font-extrabold text-indigoInk hover:text-sakura btn-press">
+                  🔊 Audio
+                </button>
+                <button type="button" id="btn-blitz-clue" onclick="useBlitzVisualClue()" class="px-2.5 py-1 rounded-full bg-yuzuLight hover:bg-yuzu/30 text-amber-900 border border-yuzu/40 text-[11px] font-extrabold btn-press">
+                  💡 Clue (-5)
+                </button>
+              </div>
+            </div>
+
+            <div id="blitz-prompt-jp" class="font-jp font-black text-5xl text-sumi my-3">あ</div>
+
+            <div id="blitz-clue-panel" class="hidden mb-3 rounded-2xl bg-yuzuLight/70 border border-yuzu/40 p-2.5 flex items-center justify-center gap-2.5 anim-pop">
+              <div id="blitz-clue-svg" class="w-10 h-10 rounded-xl bg-white border border-stone-200 flex items-center justify-center shrink-0"></div>
+              <p id="blitz-clue-desc" class="text-xs font-extrabold text-amber-900 text-left">Clue text</p>
+            </div>
+
+            <div id="blitz-options-grid" class="grid grid-cols-2 gap-2">
+              <!-- Populated by JS -->
+            </div>
+
+            <!-- Celebratory Appreciation Bar -->
+            <div id="blitz-appreciation-bar" class="hidden mt-3 rounded-2xl bg-matchaLight border border-matcha/30 px-3 py-2 flex items-center justify-between text-left anim-pop">
+              <span id="blitz-appreciation-msg" class="text-xs font-extrabold text-matchaDark">Nice hit! +10 pts</span>
+              <span id="blitz-milestone-pill" class="px-2 py-0.5 rounded-full bg-yuzu text-sumi text-[10px] font-black">Streak</span>
+            </div>
+          </div>
+
+          <button type="button" id="btn-blitz-finish" onclick="endBlitzRound()" class="w-full py-2.5 rounded-2xl bg-stone-100 hover:bg-stone-200 text-stone-600 font-extrabold text-xs btn-press">
+            Finish Early
+          </button>
+        </div>
+
+        <!-- Blitz Results -->
+        <div id="blitz-results-card" class="hidden bg-white rounded-3xl border border-stone-200/80 shadow-card p-5 text-center space-y-3 anim-pop">
+          <div class="w-14 h-14 mx-auto rounded-2xl bg-yuzuLight text-amber-800 flex items-center justify-center text-2xl font-black">
+            ⚡
+          </div>
+          <h3 class="text-lg font-black text-sumi">Blitz Complete!</h3>
+          <p id="blitz-result-summary" class="text-xs text-stone-600">Great speed and accuracy.</p>
+
+          <div class="grid grid-cols-3 gap-2 bg-washi rounded-2xl p-3 border border-stone-200/70">
+            <div>
+              <div id="blitz-res-score" class="text-base font-black text-indigoInk">0</div>
+              <div class="text-[10px] font-bold text-stone-500">Score</div>
+            </div>
+            <div>
+              <div id="blitz-res-acc" class="text-base font-black text-matcha">0%</div>
+              <div class="text-[10px] font-bold text-stone-500">Accuracy</div>
+            </div>
+            <div>
+              <div id="blitz-res-xp" class="text-base font-black text-sakura">+0</div>
+              <div class="text-[10px] font-bold text-stone-500">XP Earned</div>
+            </div>
+          </div>
+
+          <button type="button" id="btn-blitz-again" onclick="startBlitzGame()" class="w-full py-3 rounded-2xl bg-sakura hover:bg-sakuraDark text-white font-black text-sm btn-press">
+            Play Again
+          </button>
+        </div>
+      </section>
+
+      <!-- =================================================================== -->
+      <!-- TAB 4: KANA (Hiragana & Katakana Soundboard + Visual Clue Inspector) -->
+      <!-- =================================================================== -->
+      <section id="tab-kana" class="hidden space-y-3.5 anim-pop">
+        <div class="bg-white rounded-2xl border border-stone-200/80 p-2 shadow-card grid grid-cols-2 gap-1.5">
+          <button type="button" id="btn-script-hiragana" onclick="switchKanaScript('hiragana')" class="py-2 rounded-xl text-xs font-black bg-indigoInk text-white btn-press">
+            Hiragana (ひらがな)
+          </button>
+          <button type="button" id="btn-script-katakana" onclick="switchKanaScript('katakana')" class="py-2 rounded-xl text-xs font-extrabold bg-stone-100 text-stone-600 btn-press">
+            Katakana (カタカナ)
+          </button>
+        </div>
+
+        <!-- Selected Kana Inspector -->
+        <div class="bg-white rounded-3xl border border-stone-200/80 shadow-card p-4 flex items-center justify-between gap-3">
+          <div class="flex items-center gap-3 min-w-0">
+            <div id="kana-insp-svg-box" class="w-14 h-14 rounded-2xl bg-washi border border-stone-200 flex items-center justify-center shrink-0"></div>
+            <div class="min-w-0">
+              <div class="flex items-baseline gap-2">
+                <span id="kana-insp-char" class="font-jp font-black text-3xl text-sumi">あ</span>
+                <span id="kana-insp-romaji" class="text-sm font-black text-sakura">a</span>
+                <span class="px-2 py-0.5 rounded-full bg-soraLight text-sora text-[9px] font-black">ja-JP</span>
+              </div>
+              <p id="kana-insp-clue" class="text-xs font-bold text-stone-600 truncate">Apple hook — like "a" in father</p>
+            </div>
+          </div>
+
+          <button type="button" id="btn-kana-play" onclick="speakInspectedKana()" class="px-3 py-2 rounded-2xl bg-sakuraLight hover:bg-sakura text-sakuraDark hover:text-white text-xs font-black shrink-0 transition-colors btn-press">
+            🔊 Play
+          </button>
+        </div>
+
+        <!-- Interactive Kana Grid -->
+        <div id="kana-soundboard-grid" class="grid grid-cols-5 gap-2">
+          <!-- Populated via JS -->
+        </div>
+      </section>
+    </main>
+
+    <!-- BOTTOM 4-TAB NAVIGATION BAR -->
+    <nav aria-label="Primary Navigation" class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md z-30 bg-white/95 backdrop-blur border-t border-stone-200/90 px-2 py-1.5 grid grid-cols-4 gap-1">
+      <button type="button" id="nav-tab-sprint" onclick="switchTab('sprint')" class="flex flex-col items-center justify-center py-1.5 rounded-xl text-sakura bg-sakuraLight/70 font-extrabold transition-colors btn-press">
+        <span class="text-base leading-none">🏃</span>
+        <span class="text-[10px] mt-1 font-black">Sprint</span>
+      </button>
+
+      <button type="button" id="nav-tab-cards" onclick="switchTab('cards')" class="flex flex-col items-center justify-center py-1.5 rounded-xl text-stone-500 hover:text-indigoInk font-bold transition-colors btn-press">
+        <span class="text-base leading-none">🃏</span>
+        <span class="text-[10px] mt-1 font-extrabold">Cards</span>
+      </button>
+
+      <button type="button" id="nav-tab-blitz" onclick="switchTab('blitz')" class="flex flex-col items-center justify-center py-1.5 rounded-xl text-stone-500 hover:text-indigoInk font-bold transition-colors btn-press">
+        <span class="text-base leading-none">⚡</span>
+        <span class="text-[10px] mt-1 font-extrabold">Blitz</span>
+      </button>
+
+      <button type="button" id="nav-tab-kana" onclick="switchTab('kana')" class="flex flex-col items-center justify-center py-1.5 rounded-xl text-stone-500 hover:text-indigoInk font-bold transition-colors btn-press">
+        <span class="text-base leading-none">あ</span>
+        <span class="text-[10px] mt-1 font-extrabold">Kana</span>
+      </button>
+    </nav>
+  </div>
+
+  <script>
+    /**
+     * =========================================================================
+     * 1. VISUAL CLUE SVG GENERATOR (Inline Mnemonic Icons)
+     * =========================================================================
+     */
+    function buildVisualClueSVG(kind) {
+      const icons = {
+        apple: `<svg class="w-8 h-8" viewBox="0 0 40 40" fill="none">
+          <path d="M20 11 C20 7, 25 5, 27 6" stroke="#15803D" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M13 15 C9 15, 7 20, 9 27 C11 33, 16 35, 20 33 C24 35, 29 33, 31 27 C33 20, 31 15, 27 15 C24 15, 22 17, 20 17 C18 17, 16 15, 13 15 Z" fill="#FFE4E6" stroke="#E11D48" stroke-width="2.2"/>
+        </svg>`,
+        reeds: `<svg class="w-8 h-8" viewBox="0 0 40 40" fill="none">
+          <path d="M14 33 C12 24, 13 15, 16 9" stroke="#15803D" stroke-width="2.8" stroke-linecap="round"/>
+          <path d="M25 33 C27 25, 26 18, 24 13" stroke="#0284C7" stroke-width="2.8" stroke-linecap="round"/>
+          <path d="M7 33 H33" stroke="#78716C" stroke-width="2" stroke-linecap="round"/>
+        </svg>`,
+        ufo: `<svg class="w-8 h-8" viewBox="0 0 40 40" fill="none">
+          <path d="M13 17 C13 11, 27 11, 27 17" fill="#E0F2FE" stroke="#0284C7" stroke-width="2.2"/>
+          <ellipse cx="20" cy="19" rx="13" ry="5" fill="#FEF9C3" stroke="#EAB308" stroke-width="2.2"/>
+          <path d="M15 26 L13 33 M20 26 V34 M25 26 L27 33" stroke="#E11D48" stroke-width="2" stroke-dasharray="2 2" stroke-linecap="round"/>
+        </svg>`,
+        hook: `<svg class="w-8 h-8" viewBox="0 0 40 40" fill="none">
+          <path d="M20 7 V25 C20 31, 12 31, 12 25" stroke="#0284C7" stroke-width="2.8" stroke-linecap="round"/>
+          <path d="M12 25 L9 22 M12 25 L15 22" stroke="#0284C7" stroke-width="2.4" stroke-linecap="round"/>
+        </svg>`,
+        bow: `<svg class="w-8 h-8" viewBox="0 0 40 40" fill="none">
+          <path d="M11 11 H29" stroke="#1E293B" stroke-width="2.6" stroke-linecap="round"/>
+          <path d="M18 11 V28 C18 32, 27 31, 27 25 C27 20, 19 20, 18 24" stroke="#E11D48" stroke-width="2.6" stroke-linecap="round"/>
+        </svg>`,
+        wave: `<svg class="w-8 h-8" viewBox="0 0 40 40" fill="none">
+          <path d="M6 21 C10 14, 14 28, 18 21 C22 14, 26 28, 30 21 C32 17, 33 17, 34 19" stroke="#0284C7" stroke-width="2.8" stroke-linecap="round"/>
+          <path d="M8 29 C13 24, 27 24, 32 29" stroke="#7DD3FC" stroke-width="2" stroke-linecap="round"/>
+        </svg>`,
+        sun: `<svg class="w-8 h-8" viewBox="0 0 40 40" fill="none">
+          <circle cx="20" cy="20" r="7" fill="#FEF9C3" stroke="#EAB308" stroke-width="2.4"/>
+          <path d="M20 6 V10 M20 30 V34 M6 20 H10 M30 20 H34 M10 10 L13 13 M27 27 L30 30 M30 10 L27 13 M13 27 L10 30" stroke="#EAB308" stroke-width="2.2" stroke-linecap="round"/>
+        </svg>`,
+        cup: `<svg class="w-8 h-8" viewBox="0 0 40 40" fill="none">
+          <path d="M10 16 H26 V25 C26 29, 23 31, 18 31 C13 31, 10 29, 10 25 Z" fill="#FEF9C3" stroke="#78350F" stroke-width="2.2"/>
+          <path d="M26 18 H30 C32 18, 33 20, 33 22 C33 24, 31 25, 26 25" stroke="#78350F" stroke-width="2.2" stroke-linecap="round"/>
+          <path d="M15 8 C14 10, 16 11, 15 13 M21 8 C20 10, 22 11, 21 13" stroke="#E11D48" stroke-width="2" stroke-linecap="round"/>
+        </svg>`,
+        water: `<svg class="w-8 h-8" viewBox="0 0 40 40" fill="none">
+          <path d="M20 8 C20 8, 11 19, 11 25 C11 30, 15 33, 20 33 C25 33, 29 30, 29 25 C29 19, 20 8, 20 8 Z" fill="#E0F2FE" stroke="#0284C7" stroke-width="2.3"/>
+        </svg>`,
+        train: `<svg class="w-8 h-8" viewBox="0 0 40 40" fill="none">
+          <rect x="11" y="9" width="18" height="19" rx="5" fill="#E0F2FE" stroke="#1E293B" stroke-width="2.2"/>
+          <rect x="14" y="13" width="12" height="7" rx="2" fill="#FEF9C3" stroke="#1E293B" stroke-width="1.6"/>
+          <circle cx="15" cy="24" r="1.8" fill="#E11D48"/><circle cx="25" cy="24" r="1.8" fill="#E11D48"/>
+          <path d="M13 32 L10 35 M27 32 L30 35" stroke="#78716C" stroke-width="2.2" stroke-linecap="round"/>
+        </svg>`,
+        link: `<svg class="w-8 h-8" viewBox="0 0 40 40" fill="none">
+          <circle cx="15" cy="20" r="6" fill="#FFE4E6" stroke="#E11D48" stroke-width="2.3"/>
+          <circle cx="25" cy="20" r="6" fill="#DCFCE7" stroke="#15803D" stroke-width="2.3"/>
+        </svg>`,
+        clock: `<svg class="w-8 h-8" viewBox="0 0 40 40" fill="none">
+          <circle cx="20" cy="20" r="11" fill="#FEF9C3" stroke="#1E293B" stroke-width="2.2"/>
+          <path d="M20 13 V20 L25 23" stroke="#E11D48" stroke-width="2.4" stroke-linecap="round"/>
+        </svg>`,
+        spark: `<svg class="w-8 h-8" viewBox="0 0 40 40" fill="none">
+          <path d="M20 7 L23 16 L32 20 L23 24 L20 33 L17 24 L8 20 L17 16 Z" fill="#FEF9C3" stroke="#EAB308" stroke-width="2.2" stroke-linejoin="round"/>
+        </svg>`
+      };
+      return icons[kind] || icons.spark;
+    }
+
+    /**
+     * =========================================================================
+     * 2. KANA SOUNDBOARD DATA (Hiragana & Katakana)
+     * =========================================================================
+     */
+    const HIRAGANA_CHART = [
+      { jp: 'あ', romaji: 'a', clue: 'apple', note: 'Apple hook — like "a" in father' },
+      { jp: 'い', romaji: 'i', clue: 'reeds', note: 'Two reeds — like "ee" in see' },
+      { jp: 'う', romaji: 'u', clue: 'ufo', note: 'UFO beam — like "oo" in moon' },
+      { jp: 'え', romaji: 'e', clue: 'train', note: 'Exotic step — like "e" in bed' },
+      { jp: 'お', romaji: 'o', clue: 'bow', note: 'Curved bow — like "o" in more' },
+      { jp: 'か', romaji: 'ka', clue: 'hook', note: 'Cut with a hook — "ka" in karma' },
+      { jp: 'き', romaji: 'ki', clue: 'link', note: 'Old key shape — "ki" in key' },
+      { jp: 'く', romaji: 'ku', clue: 'hook', note: 'Bird beak — "ku" in coo' },
+      { jp: 'け', romaji: 'ke', clue: 'spark', note: 'Keg frame — "ke" in keg' },
+      { jp: 'こ', romaji: 'ko', clue: 'link', note: 'Two koi fish — "ko" in coat' },
+      { jp: 'さ', romaji: 'sa', clue: 'wave', note: 'Saw blade — "sa" in salsa' },
+      { jp: 'し', romaji: 'shi', clue: 'hook', note: 'Fishing hook — "she" in sheep' },
+      { jp: 'す', romaji: 'su', clue: 'wave', note: 'Swing loop — "su" in sue' },
+      { jp: 'せ', romaji: 'se', clue: 'spark', note: 'Set square — "se" in set' },
+      { jp: 'そ', romaji: 'so', clue: 'wave', note: 'Zigzag stitch — "so" in solo' },
+      { jp: 'た', romaji: 'ta', clue: 'link', note: 'Ten + curve — "ta" in taco' },
+      { jp: 'ち', romaji: 'chi', clue: 'hook', note: 'Cheerful curve — "chi" in cheese' },
+      { jp: 'つ', romaji: 'tsu', clue: 'wave', note: 'Tsunami wave — "tsu" in tsunami' },
+      { jp: 'て', romaji: 'te', clue: 'hook', note: 'Telephone pole — "te" in ten' },
+      { jp: 'と', romaji: 'to', clue: 'hook', note: 'Toe with thorn — "to" in toe' },
+      { jp: 'な', romaji: 'na', clue: 'link', note: 'Naughty knot — "na" in nacho' },
+      { jp: 'に', romaji: 'ni', clue: 'reeds', note: 'Needle + two lines — "ni" in knee' },
+      { jp: 'ぬ', romaji: 'nu', clue: 'wave', note: 'Noodles twirl — "nu" in nuke' },
+      { jp: 'ね', romaji: 'ne', clue: 'spark', note: 'Cat tail loop — "ne" in net' },
+      { jp: 'の', romaji: 'no', clue: 'apple', note: 'No-entry swirl — "no" in note' }
+    ];
+
+    const KATAKANA_CHART = [
+      { jp: 'ア', romaji: 'a', clue: 'hook', note: 'Sharp axe — "a" in father' },
+      { jp: 'イ', romaji: 'i', clue: 'reeds', note: 'Eagle wing — "ee" in see' },
+      { jp: 'ウ', romaji: 'u', clue: 'ufo', note: 'U-turn peak — "oo" in moon' },
+      { jp: 'エ', romaji: 'e', clue: 'train', note: 'I-beam steel — "e" in bed' },
+      { jp: 'オ', romaji: 'o', clue: 'bow', note: 'Opera singer — "o" in more' },
+      { jp: 'カ', romaji: 'ka', clue: 'hook', note: 'Knife cut — "ka" in karma' },
+      { jp: 'キ', romaji: 'ki', clue: 'link', note: 'Key teeth — "ki" in key' },
+      { jp: 'ク', romaji: 'ku', clue: 'hook', note: 'Condor beak — "ku" in coo' },
+      { jp: 'ケ', romaji: 'ke', clue: 'spark', note: 'Keg frame — "ke" in keg' },
+      { jp: 'コ', romaji: 'ko', clue: 'link', note: 'Corner box — "ko" in coat' },
+      { jp: 'サ', romaji: 'sa', clue: 'wave', note: 'Salsa step — "sa" in salsa' },
+      { jp: 'シ', romaji: 'shi', clue: 'wave', note: 'Upward smile ("shi") — "she"' },
+      { jp: 'ス', romaji: 'su', clue: 'hook', note: 'Ski slope — "su" in sue' },
+      { jp: 'セ', romaji: 'se', clue: 'spark', note: 'Set square — "se" in set' },
+      { jp: 'ソ', romaji: 'so', clue: 'wave', note: 'Downward glance ("so") — "so"' },
+      { jp: 'タ', romaji: 'ta', clue: 'link', note: 'Taco shell — "ta" in taco' },
+      { jp: 'チ', romaji: 'chi', clue: 'hook', note: 'Chick wing — "chi" in cheese' },
+      { jp: 'ツ', romaji: 'tsu', clue: 'wave', note: 'Three droplets ("tsu") — "tsu"' },
+      { jp: 'テ', romaji: 'te', clue: 'train', note: 'TV antenna — "te" in ten' },
+      { jp: 'ト', romaji: 'to', clue: 'hook', note: 'Totem pole — "to" in toe' },
+      { jp: 'ナ', romaji: 'na', clue: 'link', note: 'Cross + slash — "na" in nacho' },
+      { jp: 'ニ', romaji: 'ni', clue: 'reeds', note: 'Two flat bars — "ni" in knee' },
+      { jp: 'ヌ', romaji: 'nu', clue: 'wave', note: 'Noodle fork — "nu" in nuke' },
+      { jp: 'ネ', romaji: 'ne', clue: 'spark', note: 'Nest hook — "ne" in net' },
+      { jp: 'ノ', romaji: 'no', clue: 'apple', note: 'Single diagonal slash — "no"' }
+    ];
+
+    /**
+     * =========================================================================
+     * 3. 14-DAY JLPT N5 SYLLABUS ROADMAP
+     * =========================================================================
+     */
+    const SYLLABUS_DAYS = [
+      {
+        day: 1,
+        title: 'Hiragana Vowels & Basic Greetings',
+        topic: 'A-row vowels + daily greetings',
+        category: 'hiragana',
+        items: [
+          { id: 'd1_a', jp: 'あ', romaji: 'a', meaning: 'Vowel "a" (father)', tip: 'Looks like an apple with a leaf.', clue: 'apple' },
+          { id: 'd1_i', jp: 'い', romaji: 'i', meaning: 'Vowel "i" (see)', tip: 'Two tall reeds side by side.', clue: 'reeds' },
+          { id: 'd1_u', jp: 'う', romaji: 'u', meaning: 'Vowel "u" (moon)', tip: 'A tilted UFO over a beam.', clue: 'ufo' },
+          { id: 'd1_ohayo', jp: 'おはよう', romaji: 'ohayō', meaning: 'Good morning', tip: 'Polite morning greeting.', clue: 'sun' }
+        ]
+      },
+      {
+        day: 2,
+        title: 'Hiragana K/S/T/N Rows',
+        topic: 'か・し・た・な + core kana',
+        category: 'hiragana',
+        items: [
+          { id: 'd2_ka', jp: 'か', romaji: 'ka', meaning: 'Kana "ka"', tip: 'Hooked blade on the left.', clue: 'hook' },
+          { id: 'd2_shi', jp: 'し', romaji: 'shi', meaning: 'Kana "shi"', tip: 'Curved fishing hook.', clue: 'hook' },
+          { id: 'd2_ta', jp: 'た', romaji: 'ta', meaning: 'Kana "ta"', tip: 'Cross + sweeping tail.', clue: 'link' },
+          { id: 'd2_na', jp: 'な', romaji: 'na', meaning: 'Kana "na"', tip: 'Knotted loop on the right.', clue: 'link' }
+        ]
+      },
+      {
+        day: 3,
+        title: 'Hiragana H/M/Y/R/W Rows',
+        topic: 'は・ま・や・ら・わ + more kana',
+        category: 'hiragana',
+        items: [
+          { id: 'd3_ma', jp: 'ま', romaji: 'ma', meaning: 'Kana "ma"', tip: 'Two top bars + looped tail.', clue: 'link' },
+          { id: 'd3_ya', jp: 'や', romaji: 'ya', meaning: 'Kana "ya"', tip: 'Sweeping arch + cross stroke.', clue: 'spark' },
+          { id: 'd3_re', jp: 'れ', romaji: 're', meaning: 'Kana "re"', tip: 'Vertical stem + wave sweep.', clue: 'wave' },
+          { id: 'd3_wa', jp: 'わ', romaji: 'wa', meaning: 'Kana "wa"', tip: 'Simple open curve.', clue: 'wave' }
+        ]
+      },
+      {
+        day: 4,
+        title: 'Katakana Basics',
+        topic: 'ア・イ・ウ・エ・オ + angular kana',
+        category: 'katakana',
+        items: [
+          { id: 'd4_ka_a', jp: 'ア', romaji: 'a', meaning: 'Katakana "a"', tip: 'Angular axe stroke.', clue: 'hook' },
+          { id: 'd4_ka_i', jp: 'イ', romaji: 'i', meaning: 'Katakana "i"', tip: 'Two crisp angled strokes.', clue: 'reeds' },
+          { id: 'd4_ka_u', jp: 'ウ', romaji: 'u', meaning: 'Katakana "u"', tip: 'Top cap + vertical stroke.', clue: 'ufo' },
+          { id: 'd4_ka_o', jp: 'オ', romaji: 'o', meaning: 'Katakana "o"', tip: 'Cross + loop + side tick.', clue: 'bow' }
+        ]
+      },
+      {
+        day: 5,
+        title: 'Katakana Extended & Loanwords',
+        topic: 'コーヒー・パン・タクシー・ホテル',
+        category: 'katakana',
+        items: [
+          { id: 'd5_kohi', jp: 'コーヒー', romaji: 'kōhī', meaning: 'Coffee', tip: 'Dash (ー) lengthens the vowel.', clue: 'cup' },
+          { id: 'd5_pan', jp: 'パン', romaji: 'pan', meaning: 'Bread', tip: 'Common bakery loanword.', clue: 'spark' },
+          { id: 'd5_takushi', jp: 'タクシー', romaji: 'takushī', meaning: 'Taxi', tip: 'Helpful transport loanword.', clue: 'train' },
+          { id: 'd5_hoteru', jp: 'ホテル', romaji: 'hoteru', meaning: 'Hotel', tip: 'Travel accommodation word.', clue: 'link' }
+        ]
+      },
+      {
+        day: 6,
+        title: 'Core Particles (wa, wo, ni, de)',
+        topic: 'は・を・に・で sentence markers',
+        category: 'phrases',
+        items: [
+          { id: 'd6_wa', jp: 'は', romaji: 'wa', meaning: 'Topic particle "wa"', tip: 'Written は, read "wa" as topic marker.', clue: 'link' },
+          { id: 'd6_wo', jp: 'を', romaji: 'o (wo)', meaning: 'Object particle "o"', tip: 'Marks direct action target.', clue: 'hook' },
+          { id: 'd6_ni', jp: 'に', romaji: 'ni', meaning: 'Target / time / place "ni"', tip: 'Points to destination or time.', clue: 'reeds' },
+          { id: 'd6_de', jp: 'で', romaji: 'de', meaning: 'Place / means particle "de"', tip: 'Marks where action happens or transport.', clue: 'train' }
+        ]
+      },
+      {
+        day: 7,
+        title: 'Everyday Verbs',
+        topic: 'たべます・のみます・いきます・みます',
+        category: 'phrases',
+        items: [
+          { id: 'd7_tabemasu', jp: 'たべます', romaji: 'tabemasu', meaning: 'To eat (polite)', tip: 'Used for meals and snacks.', clue: 'cup' },
+          { id: 'd7_nomimasu', jp: 'のみます', romaji: 'nomimasu', meaning: 'To drink (polite)', tip: 'Used for water, tea, or coffee.', clue: 'water' },
+          { id: 'd7_ikimasu', jp: 'いきます', romaji: 'ikimasu', meaning: 'To go (polite)', tip: 'Used when heading to a place.', clue: 'train' },
+          { id: 'd7_mimasu', jp: 'みます', romaji: 'mimasu', meaning: 'To see / watch (polite)', tip: 'Used for signs, views, or shows.', clue: 'reeds' }
+        ]
+      },
+      {
+        day: 8,
+        title: 'Numbers & Counters',
+        topic: 'いち・に・さん・ひとつ',
+        category: 'phrases',
+        items: [
+          { id: 'd8_ichi', jp: 'いち', romaji: 'ichi', meaning: 'One (1)', tip: 'Core counting number 1.', clue: 'reeds' },
+          { id: 'd8_ni', jp: 'に', romaji: 'ni', meaning: 'Two (2)', tip: 'Core counting number 2.', clue: 'reeds' },
+          { id: 'd8_san', jp: 'さん', romaji: 'san', meaning: 'Three (3)', tip: 'Core counting number 3.', clue: 'wave' },
+          { id: 'd8_hitotsu', jp: 'ひとつ', romaji: 'hitotsu', meaning: 'One item (counter)', tip: 'General counter for one thing.', clue: 'spark' }
+        ]
+      },
+      {
+        day: 9,
+        title: 'Time & Days',
+        topic: 'きょう・いま・なんじ・あさ',
+        category: 'phrases',
+        items: [
+          { id: 'd9_kyou', jp: 'きょう', romaji: 'kyō', meaning: 'Today', tip: 'Essential daily schedule word.', clue: 'sun' },
+          { id: 'd9_ima', jp: 'いま', romaji: 'ima', meaning: 'Now', tip: 'Marks current moment.', clue: 'clock' },
+          { id: 'd9_nanji', jp: 'なんじ', romaji: 'nanji', meaning: 'What time?', tip: 'Polite question for time.', clue: 'clock' },
+          { id: 'd9_asa', jp: 'あさ', romaji: 'asa', meaning: 'Morning', tip: 'Morning time of day.', clue: 'sun' }
+        ]
+      },
+      {
+        day: 10,
+        title: 'Shopping & Food Phrases',
+        topic: 'みず・すし・いくら・おいしい',
+        category: 'phrases',
+        items: [
+          { id: 'd10_mizu', jp: 'みず', romaji: 'mizu', meaning: 'Water', tip: 'Essential everyday drink.', clue: 'water' },
+          { id: 'd10_sushi', jp: 'すし', romaji: 'sushi', meaning: 'Sushi', tip: 'Classic Japanese food.', clue: 'wave' },
+          { id: 'd10_ikura', jp: 'いくら', romaji: 'ikura', meaning: 'How much?', tip: 'Handy shopping price question.', clue: 'spark' },
+          { id: 'd10_oishii', jp: 'おいしい', romaji: 'oishii', meaning: 'Delicious / tasty', tip: 'Great compliment after eating.', clue: 'cup' }
+        ]
+      },
+      {
+        day: 11,
+        title: 'Directions & Transit',
+        topic: 'えき・どこ・これ・それ',
+        category: 'phrases',
+        items: [
+          { id: 'd11_eki', jp: 'えき', romaji: 'eki', meaning: 'Train station', tip: 'Key transit landmark.', clue: 'train' },
+          { id: 'd11_doko', jp: 'どこ', romaji: 'doko', meaning: 'Where?', tip: 'Asking directions or location.', clue: 'train' },
+          { id: 'd11_kore', jp: 'これ', romaji: 'kore', meaning: 'This (near speaker)', tip: 'Pointing to something right here.', clue: 'link' },
+          { id: 'd11_sore', jp: 'それ', romaji: 'sore', meaning: 'That (near listener)', tip: 'Pointing near the other person.', clue: 'hook' }
+        ]
+      },
+      {
+        day: 12,
+        title: 'Adjectives & Descriptions',
+        topic: 'おおきい・ちいさい・いい・あたらしい',
+        category: 'phrases',
+        items: [
+          { id: 'd12_ookii', jp: 'おおきい', romaji: 'ōkii', meaning: 'Big / large', tip: 'Common N5 i-adjective.', clue: 'bow' },
+          { id: 'd12_chiisai', jp: 'ちいさい', romaji: 'chiisai', meaning: 'Small / little', tip: 'Opposite of おおきい.', clue: 'reeds' },
+          { id: 'd12_ii', jp: 'いい', romaji: 'ī', meaning: 'Good / nice', tip: 'Everyday positive adjective.', clue: 'spark' },
+          { id: 'd12_atarashii', jp: 'あたらしい', romaji: 'atarashii', meaning: 'New', tip: 'Useful for items or places.', clue: 'sun' }
+        ]
+      },
+      {
+        day: 13,
+        title: 'Polite Requests & Questions',
+        topic: 'すみません・ください・わかりません・はい',
+        category: 'phrases',
+        items: [
+          { id: 'd13_sumimasen', jp: 'すみません', romaji: 'sumimasen', meaning: 'Excuse me / Sorry', tip: 'Best all-purpose polite opener.', clue: 'bow' },
+          { id: 'd13_kudasai', jp: 'ください', romaji: 'kudasai', meaning: 'Please give me', tip: 'Polite request after a noun.', clue: 'cup' },
+          { id: 'd13_wakarimasen', jp: 'わかりません', romaji: 'wakarimasen', meaning: 'I don\'t understand', tip: 'Helpful phrase when learning.', clue: 'reeds' },
+          { id: 'd13_hai', jp: 'はい', romaji: 'hai', meaning: 'Yes / Got it', tip: 'Affirmative polite reply.', clue: 'spark' }
+        ]
+      },
+      {
+        day: 14,
+        title: 'Full N5 Survival Review',
+        topic: 'ありがとう・こんにちは・わたし・いぬ',
+        category: 'phrases',
+        items: [
+          { id: 'd14_arigato', jp: 'ありがとう', romaji: 'arigatō', meaning: 'Thank you', tip: 'Core gratitude expression.', clue: 'spark' },
+          { id: 'd14_konnichiwa', jp: 'こんにちは', romaji: 'konnichiwa', meaning: 'Hello / Good afternoon', tip: 'Standard daytime greeting.', clue: 'sun' },
+          { id: 'd14_watashi', jp: 'わたし', romaji: 'watashi', meaning: 'I / me', tip: 'Polite first-person pronoun.', clue: 'link' },
+          { id: 'd14_inu', jp: 'いぬ', romaji: 'inu', meaning: 'Dog', tip: 'Everyday N5 animal word.', clue: 'spark' }
+        ]
+      }
+    ];
+
+    /**
+     * =========================================================================
+     * 4. SAFE STORAGE & PERSISTENCE (try/catch with memory fallback)
+     * =========================================================================
+     */
+    const STORAGE_KEY = 'kanasprint_n5_complete_v1';
+    const DURATION_CONFIG = {
+      '3m': { seconds: 180, label: '3 Min' },
+      '5m': { seconds: 300, label: '5 Min' },
+      '8m': { seconds: 480, label: '8 Min' }
+    };
+
+    const defaultState = {
+      xp: 0,
+      streak: 1,
+      completedDays: [],
+      weakItemIds: [],
+      revisionMixEnabled: true,
+      soundEnabled: true,
+      showRomaji: true,
+      showVisualClue: true,
+      durationKey: '5m',
+      blitzDeck: 'mixed',
+      blitzBestScore: 0,
+      blitzBestCombo: 1
+    };
+
+    let state = { ...defaultState };
+    let memoryStorage = {};
+
+    function safeStorageGet(key) {
+      try {
+        return window.localStorage.getItem(key);
+      } catch (err) {
+        return Object.prototype.hasOwnProperty.call(memoryStorage, key) ? memoryStorage[key] : null;
+      }
+    }
+
+    function safeStorageSet(key, value) {
+      try {
+        window.localStorage.setItem(key, value);
+      } catch (err) {
+        memoryStorage[key] = value;
+      }
+    }
+
+    function safeStorageRemove(key) {
+      try {
+        window.localStorage.removeItem(key);
+      } catch (err) {
+        delete memoryStorage[key];
+      }
+    }
+
+    function loadStateSafely() {
+      try {
+        const raw = safeStorageGet(STORAGE_KEY);
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') {
+          state = {
+            ...defaultState,
+            ...parsed,
+            completedDays: Array.isArray(parsed.completedDays) ? parsed.completedDays : [],
+            weakItemIds: Array.isArray(parsed.weakItemIds) ? parsed.weakItemIds : []
+          };
+          if (!DURATION_CONFIG[state.durationKey]) state.durationKey = '5m';
+          if (!['mixed', 'hiragana', 'katakana', 'phrases'].includes(state.blitzDeck)) {
+            state.blitzDeck = 'mixed';
+          }
+          state.soundEnabled = state.soundEnabled !== false;
+          state.revisionMixEnabled = state.revisionMixEnabled !== false;
+          state.showRomaji = state.showRomaji !== false;
+          state.showVisualClue = state.showVisualClue !== false;
+        }
+      } catch (err) {
+        state = { ...defaultState };
+      }
+    }
+
+    function saveStateSafely() {
+      try {
+        safeStorageSet(STORAGE_KEY, JSON.stringify(state));
+      } catch (err) {
+        // Ignore storage write failures in restricted contexts
+      }
+    }
+
+    function addXP(amount) {
+      const gained = Math.max(0, Number(amount) || 0);
+      state.xp += gained;
+      saveStateSafely();
+      updateHeaderUI();
+      return gained;
+    }
+
+    function recordWeakItem(itemId) {
+      if (!itemId) return;
+      if (!state.weakItemIds.includes(itemId)) {
+        state.weakItemIds.push(itemId);
+        saveStateSafely();
+        updateHeaderUI();
+      }
+    }
+
+    function clearWeakItem(itemId) {
+      if (!itemId) return;
+      const idx = state.weakItemIds.indexOf(itemId);
+      if (idx !== -1) {
+        state.weakItemIds.splice(idx, 1);
+        saveStateSafely();
+        updateHeaderUI();
+      }
+    }
+
+    function getDueRevisionCount() {
+      return state.weakItemIds.length;
+    }
+
+    function getAllCurriculumItemsWithMeta() {
+      const out = [];
+      SYLLABUS_DAYS.forEach(d => {
+        d.items.forEach(it => {
+          out.push({
+            ...it,
+            day: d.day,
+            dayTitle: d.title,
+            category: d.category
+          });
+        });
+      });
+      return out;
+    }
+
+    /**
+     * =========================================================================
+     * 5. WEB SPEECH API AUDIO SYSTEM (window.speechSynthesis, ja-JP, ~0.88)
+     * =========================================================================
+     */
+    const KanaAudio = (() => {
+      let cachedVoices = [];
+
+      function loadVoicesSafely() {
+        try {
+          if ('speechSynthesis' in window && typeof window.speechSynthesis.getVoices === 'function') {
+            const list = window.speechSynthesis.getVoices();
+            if (Array.isArray(list) && list.length > 0) {
+              cachedVoices = list;
+            }
+          }
+        } catch (err) {
+          // Ignore voice loading errors
+        }
+      }
+
+      function pickJapaneseVoice() {
+        loadVoicesSafely();
+        if (!cachedVoices.length) return null;
+        return (
+          cachedVoices.find(v => v && typeof v.lang === 'string' && v.lang.toLowerCase().replace('_', '-') === 'ja-jp') ||
+          cachedVoices.find(v => v && typeof v.lang === 'string' && v.lang.toLowerCase().startsWith('ja')) ||
+          null
+        );
+      }
+
+      function init() {
+        loadVoicesSafely();
+        try {
+          if ('speechSynthesis' in window && typeof window.speechSynthesis.addEventListener === 'function') {
+            window.speechSynthesis.addEventListener('voiceschanged', loadVoicesSafely);
+          }
+        } catch (err) {
+          // Ignore listener errors
+        }
+      }
+
+      function speak(jpText) {
+        const text = String(jpText || '').trim();
+        if (!text) return;
+
+        if (!state.soundEnabled) {
+          showToast('Audio muted');
+          return;
+        }
+
+        if (!('speechSynthesis' in window) || typeof window.SpeechSynthesisUtterance !== 'function') {
+          showToast('Speech synthesis not supported in this browser');
+          return;
+        }
+
+        try {
+          const synth = window.speechSynthesis;
+          if (synth.paused && typeof synth.resume === 'function') {
+            synth.resume();
+          }
+          if (typeof synth.cancel === 'function') {
+            synth.cancel();
+          }
+
+          const utterance = new window.SpeechSynthesisUtterance(text);
+          const voice = pickJapaneseVoice();
+          utterance.lang = voice && voice.lang ? voice.lang : 'ja-JP';
+          if (voice) {
+            utterance.voice = voice;
+          }
+          utterance.rate = 0.88;
+          utterance.pitch = 1.0;
+
+          utterance.onstart = () => {
+            showToast(`🔊 ${text}`);
+          };
+
+          utterance.onerror = () => {
+            // Silent guard so audio errors never disrupt UI flow
+          };
+
+          synth.speak(utterance);
+        } catch (err) {
+          // Safe guard if speechSynthesis throws
+        }
+      }
+
+      function cancel() {
+        try {
+          if ('speechSynthesis' in window && typeof window.speechSynthesis.cancel === 'function') {
+            window.speechSynthesis.cancel();
+          }
+        } catch (err) {
+          // Ignore cancel errors
+        }
+      }
+
+      return { init, speak, cancel };
+    })();
+
+    /**
+     * =========================================================================
+     * 6. SPRINT COUNTDOWN TIMER (3 Min / 5 Min / 8 Min + Start/Pause + Reset)
+     * =========================================================================
+     */
+    let secondsRemaining = DURATION_CONFIG['5m'].seconds;
+    let isTimerRunning = false;
+    let sprintIntervalId = null;
+
+    function formatClock(sec) {
+      const s = Math.max(0, Number(sec) || 0);
+      const mins = Math.floor(s / 60);
+      const rem = s % 60;
+      return `${String(mins).padStart(2, '0')}:${String(rem).padStart(2, '0')}`;
+    }
+
+    function setSprintDuration(key) {
+      if (!DURATION_CONFIG[key]) return;
+      state.durationKey = key;
+      secondsRemaining = DURATION_CONFIG[key].seconds;
+      isTimerRunning = false;
+      saveStateSafely();
+      updateHeaderUI();
+      showToast(`Timer preset: ${DURATION_CONFIG[key].label}`);
+    }
+
+    function toggleTimerRunning() {
+      if (!isTimerRunning && secondsRemaining <= 0) {
+        secondsRemaining = DURATION_CONFIG[state.durationKey]?.seconds || 300;
+      }
+      isTimerRunning = !isTimerRunning;
+      updateHeaderUI();
+      showToast(isTimerRunning ? 'Sprint timer started' : 'Sprint timer paused');
+    }
+
+    function resetTimerToSelected() {
+      secondsRemaining = DURATION_CONFIG[state.durationKey]?.seconds || 300;
+      isTimerRunning = false;
+      updateHeaderUI();
+      showToast('Sprint timer reset');
+    }
+
+    function startSprintCountdownLoop() {
+      if (sprintIntervalId) clearInterval(sprintIntervalId);
+      sprintIntervalId = setInterval(() => {
+        if (!isTimerRunning) return;
+        if (secondsRemaining > 0) {
+          secondsRemaining -= 1;
+          const display = document.getElementById('header-timer-display');
+          if (display) display.textContent = formatClock(secondsRemaining);
+          if (secondsRemaining === 0) {
+            isTimerRunning = false;
+            updateHeaderUI();
+            showToast('⏰ Sprint time reached! Great focus.');
+          }
+        }
+      }, 1000);
+    }
+
+    /**
+     * =========================================================================
+     * 7. HEADER, TOAST, TAB SWITCHING & RESET CONTROLS
+     * =========================================================================
+     */
+    let toastTimerId = null;
+    let resetConfirmPending = false;
+    let resetConfirmTimerId = null;
+
+    function showToast(msg) {
+      const toast = document.getElementById('ks-toast');
+      if (!toast) return;
+      toast.textContent = msg;
+      toast.classList.remove('opacity-0');
+      toast.classList.add('opacity-100');
+      if (toastTimerId) clearTimeout(toastTimerId);
+      toastTimerId = setTimeout(() => {
+        toast.classList.remove('opacity-100');
+        toast.classList.add('opacity-0');
+      }, 1800);
+    }
+
+    function toggleSoundFX() {
+      state.soundEnabled = !state.soundEnabled;
+      saveStateSafely();
+      updateHeaderUI();
+      if (!state.soundEnabled) {
+        KanaAudio.cancel();
+      }
+      showToast(state.soundEnabled ? 'Audio unmuted (ja-JP)' : 'Audio muted');
+    }
+
+    function updateHeaderUI() {
+      const xpEl = document.getElementById('header-xp');
+      const streakEl = document.getElementById('header-streak');
+      const revEl = document.getElementById('header-rev-count');
+      const timerEl = document.getElementById('header-timer-display');
+      const startPauseBtn = document.getElementById('btn-timer-start-pause');
+      const soundOn = document.getElementById('svg-sound-on');
+      const soundOff = document.getElementById('svg-sound-off');
+
+      if (xpEl) xpEl.textContent = String(state.xp);
+      if (streakEl) streakEl.textContent = `${state.streak}d`;
+      if (revEl) revEl.textContent = String(getDueRevisionCount());
+      if (timerEl) timerEl.textContent = formatClock(secondsRemaining);
+      if (startPauseBtn) startPauseBtn.textContent = isTimerRunning ? 'Pause' : 'Start';
+
+      if (soundOn && soundOff) {
+        soundOn.classList.toggle('hidden', !state.soundEnabled);
+        soundOff.classList.toggle('hidden', state.soundEnabled);
+      }
+
+      ['3m', '5m', '8m'].forEach(k => {
+        const btn = document.getElementById(`dur-btn-${k}`);
+        if (!btn) return;
+        if (state.durationKey === k) {
+          btn.className = 'px-2 py-1 rounded-lg text-[11px] font-extrabold transition-colors btn-press bg-indigoInk text-white';
+        } else {
+          btn.className = 'px-2 py-1 rounded-lg text-[11px] font-extrabold transition-colors btn-press bg-stone-100 text-stone-600 hover:bg-stone-200';
+        }
+      });
+    }
+
+    function switchTab(tabName) {
+      const validTabs = ['sprint', 'cards', 'blitz', 'kana'];
+      if (!validTabs.includes(tabName)) return;
+
+      validTabs.forEach(t => {
+        const section = document.getElementById(`tab-${t}`);
+        const navBtn = document.getElementById(`nav-tab-${t}`);
+        if (section) section.classList.toggle('hidden', t !== tabName);
+        if (navBtn) {
+          if (t === tabName) {
+            navBtn.className = 'flex flex-col items-center justify-center py-1.5 rounded-xl text-sakura bg-sakuraLight/70 font-extrabold transition-colors btn-press';
+          } else {
+            navBtn.className = 'flex flex-col items-center justify-center py-1.5 rounded-xl text-stone-500 hover:text-indigoInk font-bold transition-colors btn-press';
+          }
+        }
+      });
+
+      if (tabName === 'sprint') renderSprintRoadmap();
+      if (tabName === 'cards') renderFlashcard();
+      if (tabName === 'blitz') updateBlitzLobbyUI();
+      if (tabName === 'kana') {
+        renderKanaSoundboard();
+        updateKanaInspector();
+      }
+    }
+
+    function handleResetProgressClick() {
+      const btn = document.getElementById('btn-reset-progress');
+      const hint = document.getElementById('reset-confirm-hint');
+      if (!resetConfirmPending) {
+        resetConfirmPending = true;
+        if (btn) btn.textContent = 'Confirm Reset';
+        if (hint) hint.textContent = 'Tap Confirm Reset again within 4s to reset';
+        if (resetConfirmTimerId) clearTimeout(resetConfirmTimerId);
+        resetConfirmTimerId = setTimeout(() => {
+          resetConfirmPending = false;
+          if (btn) btn.textContent = 'Reset Data';
+          if (hint) hint.textContent = 'Saved safely in browser storage';
+        }, 4000);
+        return;
+      }
+
+      resetConfirmPending = false;
+      if (resetConfirmTimerId) clearTimeout(resetConfirmTimerId);
+      safeStorageRemove(STORAGE_KEY);
+      state = { ...defaultState };
+      secondsRemaining = DURATION_CONFIG[state.durationKey].seconds;
+      isTimerRunning = false;
+      if (btn) btn.textContent = 'Reset Data';
+      if (hint) hint.textContent = 'Progress reset to Day 1';
+      updateHeaderUI();
+      updateClueToggleButtons();
+      renderSprintRoadmap();
+      renderFlashcard();
+      updateBlitzLobbyUI();
+      showToast('Progress reset cleanly');
+    }
+
+    /**
+     * =========================================================================
+     * 8. TAB 1: 14-DAY ROADMAP + CUMULATIVE REVISION + 3-LEVEL MASTERY DRILL
+     * =========================================================================
+     */
+    let activeLessonDayObj = null;
+    let studyItemIndex = 0;
+    let currentDrillLevel = 1; // 1: Guided Recognition, 2: Assisted Recall, 3: Mastery Gate (>=75%)
+    let drillQueue = [];
+    let drillIndex = 0;
+    let drillLocked = false;
+    let drillStreak = 0;
+    let optionalHintShown = false;
+    let levelStats = {
+      1: { correct: 0, total: 0 },
+      2: { correct: 0, total: 0 },
+      3: { correct: 0, total: 0 }
+    };
+
+    function getNextIncompleteDayNumber() {
+      for (const d of SYLLABUS_DAYS) {
+        if (!state.completedDays.includes(d.day)) return d.day;
+      }
+      return 1;
+    }
+
+    function toggleRevisionMix() {
+      state.revisionMixEnabled = !state.revisionMixEnabled;
+      saveStateSafely();
+      renderSprintRoadmap();
+      showToast(state.revisionMixEnabled ? 'Past-chapter & weak revision ON' : 'Past-chapter & weak revision OFF');
+    }
+
+    function toggleVisualClueMode() {
+      state.showVisualClue = !state.showVisualClue;
+      saveStateSafely();
+      updateClueToggleButtons();
+      if (activeLessonDayObj) renderLessonStudyItem();
+      renderFlashcard();
+      showToast(state.showVisualClue ? 'Visual clues ON' : 'Visual clues OFF');
+    }
+
+    function updateClueToggleButtons() {
+      const label = state.showVisualClue ? 'Clue: ON' : 'Clue: OFF';
+      const cls = state.showVisualClue
+        ? 'px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-yuzuLight text-amber-900 border border-yuzu/40 btn-press'
+        : 'px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-stone-100 text-stone-500 border border-stone-200 btn-press';
+      const b1 = document.getElementById('btn-lesson-clue-toggle');
+      const b2 = document.getElementById('btn-toggle-card-clue');
+      if (b1) { b1.textContent = label; b1.className = cls; }
+      if (b2) { b2.textContent = label; b2.className = cls; }
+    }
+
+    function renderSprintRoadmap() {
+      const nextDayNum = getNextIncompleteDayNumber();
+      const nextDayObj = SYLLABUS_DAYS.find(d => d.day === nextDayNum) || SYLLABUS_DAYS[0];
+      const completedCount = state.completedDays.length;
+      const pct = Math.round((completedCount / SYLLABUS_DAYS.length) * 100);
+
+      const titleEl = document.getElementById('roadmap-next-title');
+      const descEl = document.getElementById('roadmap-next-desc');
+      const progLbl = document.getElementById('roadmap-progress-label');
+      const progBar = document.getElementById('roadmap-progress-bar');
+      const launchTxt = document.getElementById('btn-launch-day-text');
+      const streakBadge = document.getElementById('roadmap-streak-badge');
+      const mixBtn = document.getElementById('toggle-rev-mix-btn');
+      const mixDot = document.getElementById('toggle-rev-mix-dot');
+
+      if (titleEl) titleEl.textContent = `Day ${nextDayObj.day}: ${nextDayObj.title}`;
+      if (descEl) descEl.textContent = `${nextDayObj.topic} • 3-level mastery + past-chapter review.`;
+      if (progLbl) progLbl.textContent = `${completedCount} / 14 Days (${pct}%)`;
+      if (progBar) progBar.style.width = `${pct}%`;
+      if (launchTxt) launchTxt.textContent = `Start Day ${nextDayObj.day} Sprint`;
+      if (streakBadge) streakBadge.textContent = `🔥 ${state.streak}d Streak`;
+
+      if (mixBtn && mixDot) {
+        if (state.revisionMixEnabled) {
+          mixBtn.className = 'w-11 h-6 rounded-full bg-matcha transition-colors p-0.5 shrink-0 flex items-center';
+          mixDot.className = 'w-5 h-5 rounded-full bg-white shadow transform translate-x-5 transition-transform';
+        } else {
+          mixBtn.className = 'w-11 h-6 rounded-full bg-stone-300 transition-colors p-0.5 shrink-0 flex items-center';
+          mixDot.className = 'w-5 h-5 rounded-full bg-white shadow transform translate-x-0 transition-transform';
+        }
+      }
+
+      const listEl = document.getElementById('syllabus-day-list');
+      if (!listEl) return;
+
+      listEl.innerHTML = SYLLABUS_DAYS.map(d => {
+        const done = state.completedDays.includes(d.day);
+        const isCurrent = d.day === nextDayNum && !done;
+        const badge = done
+          ? `<span class="px-2 py-0.5 rounded-full bg-matchaLight text-matchaDark text-[10px] font-black">✓ Cleared</span>`
+          : isCurrent
+            ? `<span class="px-2 py-0.5 rounded-full bg-sakuraLight text-sakuraDark text-[10px] font-black">Next</span>`
+            : `<span class="px-2 py-0.5 rounded-full bg-stone-100 text-stone-500 text-[10px] font-bold">5m</span>`;
+
+        return `
+          <button type="button" onclick="openSprintDay(${d.day})" class="w-full text-left bg-white hover:bg-stone-50 rounded-2xl border ${isCurrent ? 'border-sakura/50' : 'border-stone-200/80'} p-3 flex items-center justify-between gap-2.5 btn-press">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-9 h-9 rounded-xl ${done ? 'bg-matchaLight text-matchaDark' : 'bg-washi text-indigoInk'} border border-stone-200/70 flex items-center justify-center font-black text-xs shrink-0">
+                D${d.day}
+              </div>
+              <div class="min-w-0">
+                <div class="text-xs font-black text-sumi truncate">${d.title}</div>
+                <div class="text-[10px] font-semibold text-stone-500 truncate">${d.topic}</div>
+              </div>
+            </div>
+            <div class="shrink-0">${badge}</div>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function launchNextSprintDay() {
+      openSprintDay(getNextIncompleteDayNumber());
+    }
+
+    function openRevisionDrillFromHeader() {
+      switchTab('sprint');
+      const allItems = getAllCurriculumItemsWithMeta();
+      const due = allItems.filter(it => state.weakItemIds.includes(it.id));
+      if (!due.length) {
+        showToast('No weak items due — starting next day!');
+        openSprintDay(getNextIncompleteDayNumber());
+        return;
+      }
+      const syntheticDay = {
+        day: due[0].day,
+        title: `Due Revision (${due.length} Item${due.length > 1 ? 's' : ''})`,
+        topic: 'Targeted review of missed items',
+        category: due[0].category,
+        items: due.slice(0, 4).map(it => ({ ...it, isRevision: true, revFromDay: it.day }))
+      };
+      activeLessonDayObj = syntheticDay;
+      studyItemIndex = 0;
+      showLessonStage('study');
+      renderLessonStudyItem();
+      KanaAudio.speak(syntheticDay.items[0].jp);
+    }
+
+    function openSprintDay(dayNum) {
+      const found = SYLLABUS_DAYS.find(d => d.day === Number(dayNum)) || SYLLABUS_DAYS[0];
+      activeLessonDayObj = found;
+      studyItemIndex = 0;
+      showLessonStage('study');
+      renderLessonStudyItem();
+      if (found.items[0]) {
+        KanaAudio.speak(found.items[0].jp);
+      }
+    }
+
+    function exitLessonToRoadmap() {
+      activeLessonDayObj = null;
+      const road = document.getElementById('sprint-roadmap-view');
+      const lesson = document.getElementById('sprint-active-lesson-view');
+      if (lesson) lesson.classList.add('hidden');
+      if (road) road.classList.remove('hidden');
+      renderSprintRoadmap();
+    }
+
+    function showLessonStage(stage) {
+      const road = document.getElementById('sprint-roadmap-view');
+      const lesson = document.getElementById('sprint-active-lesson-view');
+      const study = document.getElementById('lesson-study-phase');
+      const drill = document.getElementById('lesson-drill-phase');
+      const summary = document.getElementById('lesson-summary-phase');
+      const stageTag = document.getElementById('active-lesson-stage-tag');
+      const dayTag = document.getElementById('active-lesson-day-tag');
+      const titleEl = document.getElementById('active-lesson-title');
+
+      if (road) road.classList.add('hidden');
+      if (lesson) lesson.classList.remove('hidden');
+      if (dayTag && activeLessonDayObj) dayTag.textContent = `DAY ${activeLessonDayObj.day}`;
+      if (titleEl && activeLessonDayObj) titleEl.textContent = activeLessonDayObj.title;
+
+      if (study) study.classList.toggle('hidden', stage !== 'study');
+      if (drill) drill.classList.toggle('hidden', stage !== 'drill');
+      if (summary) summary.classList.toggle('hidden', stage !== 'summary');
+
+      if (stageTag) {
+        if (stage === 'study') stageTag.textContent = 'Study';
+        else if (stage === 'drill') stageTag.textContent = `Level ${currentDrillLevel} / 3`;
+        else stageTag.textContent = 'Summary';
+      }
+    }
+
+    function renderLessonStudyItem() {
+      if (!activeLessonDayObj) return;
+      const items = activeLessonDayObj.items;
+      const item = items[studyItemIndex] || items[0];
+      if (!item) return;
+
+      const counter = document.getElementById('lesson-card-counter');
+      const jpEl = document.getElementById('lesson-item-jp');
+      const romEl = document.getElementById('lesson-item-romaji');
+      const meanEl = document.getElementById('lesson-item-meaning');
+      const tipEl = document.getElementById('lesson-item-tip');
+      const clueBox = document.getElementById('lesson-study-clue-box');
+      const clueSvg = document.getElementById('lesson-study-clue-svg');
+      const clueCap = document.getElementById('lesson-study-clue-caption');
+      const prevBtn = document.getElementById('btn-prev-study');
+      const nextBtn = document.getElementById('btn-next-study');
+
+      if (counter) counter.textContent = `Item ${studyItemIndex + 1} / ${items.length}`;
+      if (jpEl) jpEl.textContent = item.jp;
+      if (romEl) romEl.textContent = item.romaji;
+      if (meanEl) meanEl.textContent = item.meaning;
+      if (tipEl) tipEl.textContent = item.tip;
+
+      if (clueBox) clueBox.classList.toggle('hidden', !state.showVisualClue);
+      if (clueSvg) clueSvg.innerHTML = buildVisualClueSVG(item.clue);
+      if (clueCap) clueCap.textContent = `Visual clue: ${item.clue}`;
+
+      if (prevBtn) prevBtn.disabled = studyItemIndex === 0;
+      if (nextBtn) {
+        nextBtn.textContent = studyItemIndex >= items.length - 1 ? 'Start 3-Level Drill →' : 'Next Item →';
+      }
+      updateClueToggleButtons();
+    }
+
+    function speakActiveLessonItem() {
+      if (!activeLessonDayObj) return;
+      const item = activeLessonDayObj.items[studyItemIndex];
+      if (item) KanaAudio.speak(item.jp);
+    }
+
+    function prevLessonStudyItem() {
+      if (studyItemIndex > 0) {
+        studyItemIndex -= 1;
+        renderLessonStudyItem();
+        speakActiveLessonItem();
+      }
+    }
+
+    function nextLessonStudyItem() {
+      if (!activeLessonDayObj) return;
+      if (studyItemIndex < activeLessonDayObj.items.length - 1) {
+        studyItemIndex += 1;
+        renderLessonStudyItem();
+        speakActiveLessonItem();
+      } else {
+        beginThreeLevelDrill();
+      }
+    }
+
+    function buildDrillQueueForLevel(level) {
+      if (!activeLessonDayObj) return [];
+      const dayNum = Number(activeLessonDayObj.day) || 1;
+      const baseItems = activeLessonDayObj.items.map(it => ({
+        ...it,
+        day: it.day || dayNum,
+        isRevision: Boolean(it.isRevision),
+        revFromDay: it.revFromDay || it.day || dayNum
+      }));
+
+      const queue = [...baseItems];
+
+      // Mix earlier-day and weak items when studying Day 2 or later
+      if (state.revisionMixEnabled && dayNum >= 2) {
+        const earlierItems = [];
+        SYLLABUS_DAYS.forEach(d => {
+          if (d.day < dayNum) {
+            d.items.forEach(it => earlierItems.push({ ...it, day: d.day }));
+          }
+        });
+
+        const weakEarlier = earlierItems.filter(it => state.weakItemIds.includes(it.id));
+        const anyWeak = getAllCurriculumItemsWithMeta().filter(
+          it => state.weakItemIds.includes(it.id) && it.day < dayNum
+        );
+        const pool = weakEarlier.length > 0 ? weakEarlier : (anyWeak.length > 0 ? anyWeak : earlierItems);
+
+        if (pool.length > 0) {
+          const revCount = level === 3 ? 2 : 1;
+          for (let i = 0; i < revCount; i++) {
+            const pick = pool[(dayNum + level + i) % pool.length];
+            queue.push({
+              ...pick,
+              isRevision: true,
+              revFromDay: pick.day
+            });
+          }
+        }
+      }
+
+      return queue;
+    }
+
+    function updateLevelStepperUI() {
+      [1, 2, 3].forEach(lvl => {
+        const pill = document.getElementById(`step-pill-${lvl}`);
+        const accEl = document.getElementById(`step-acc-${lvl}`);
+        const st = levelStats[lvl];
+        if (accEl) {
+          if (st.total > 0) {
+            const pct = Math.round((st.correct / st.total) * 100);
+            accEl.textContent = `${pct}% (${st.correct}/${st.total})`;
+          } else {
+            accEl.textContent = lvl === 1 ? 'Guided' : lvl === 2 ? 'Active' : '≥75% Pass';
+          }
+        }
+        if (pill) {
+          if (lvl === currentDrillLevel) {
+            pill.className = 'rounded-xl px-2 py-1.5 border text-center transition-colors bg-indigoInk text-white border-indigoInk';
+          } else if (lvl < currentDrillLevel && st.total > 0) {
+            pill.className = 'rounded-xl px-2 py-1.5 border text-center transition-colors bg-matchaLight text-matchaDark border-matcha/30';
+          } else {
+            pill.className = 'rounded-xl px-2 py-1.5 border text-center transition-colors bg-stone-50 text-stone-500 border-stone-200';
+          }
+        }
+      });
+    }
+
+    function beginThreeLevelDrill() {
+      currentDrillLevel = 1;
+      drillStreak = 0;
+      levelStats = {
+        1: { correct: 0, total: 0 },
+        2: { correct: 0, total: 0 },
+        3: { correct: 0, total: 0 }
+      };
+      startDrillLevel(1);
+    }
+
+    function retryCurrentLessonDrill() {
+      beginThreeLevelDrill();
+    }
+
+    function startDrillLevel(level) {
+      currentDrillLevel = level;
+      drillQueue = buildDrillQueueForLevel(level);
+      drillIndex = 0;
+      drillLocked = false;
+      optionalHintShown = false;
+      showLessonStage('drill');
+      updateLevelStepperUI();
+      renderDrillQuestion();
+    }
+
+    function speakCurrentDrillTarget() {
+      const q = drillQueue[drillIndex];
+      if (q) KanaAudio.speak(q.jp);
+    }
+
+    function toggleDrillOptionalHint() {
+      const q = drillQueue[drillIndex];
+      if (!q) return;
+      optionalHintShown = !optionalHintShown;
+      const box = document.getElementById('drill-optional-hint-box');
+      const val = document.getElementById('drill-optional-hint-val');
+      if (val) val.textContent = q.romaji;
+      if (box) box.classList.toggle('hidden', !optionalHintShown);
+    }
+
+    function renderDrillQuestion() {
+      const q = drillQueue[drillIndex];
+      if (!q) return;
+
+      drillLocked = false;
+      optionalHintShown = false;
+
+      const lvlBadge = document.getElementById('drill-level-badge');
+      const revBadge = document.getElementById('drill-rev-badge');
+      const counter = document.getElementById('drill-q-counter');
+      const jpEl = document.getElementById('drill-prompt-jp');
+      const subEl = document.getElementById('drill-prompt-sub');
+      const hintBtn = document.getElementById('btn-drill-hint');
+      const optHintBox = document.getElementById('drill-optional-hint-box');
+      const clueBox = document.getElementById('drill-guided-clue');
+      const clueSvg = document.getElementById('drill-guided-svg');
+      const clueTxt = document.getElementById('drill-guided-text');
+      const appBox = document.getElementById('drill-appreciation-box');
+      const statusMsg = document.getElementById('drill-status-msg');
+      const choicesWrap = document.getElementById('drill-choices');
+
+      const levelLabels = {
+        1: 'LEVEL 1: GUIDED RECOGNITION',
+        2: 'LEVEL 2: ASSISTED RECALL',
+        3: 'LEVEL 3: MASTERY GATE'
+      };
+
+      if (lvlBadge) lvlBadge.textContent = levelLabels[currentDrillLevel] || 'DRILL';
+      if (revBadge) {
+        if (q.isRevision) {
+          revBadge.textContent = `Revision · Day ${q.revFromDay}`;
+          revBadge.classList.remove('hidden');
+        } else {
+          revBadge.classList.add('hidden');
+        }
+      }
+      if (counter) counter.textContent = `${drillIndex + 1} / ${drillQueue.length}`;
+      if (jpEl) jpEl.textContent = q.jp;
+
+      if (subEl) {
+        if (currentDrillLevel === 1) {
+          subEl.textContent = `Romaji hint: ${q.romaji}`;
+        } else if (currentDrillLevel === 2) {
+          subEl.textContent = 'Assisted recall — visual clue hidden; use audio or Hint if needed';
+        } else {
+          subEl.textContent = 'Mastery gate — visual clue hidden, ≥75% required to pass';
+        }
+      }
+
+      if (hintBtn) {
+        hintBtn.classList.toggle('hidden', currentDrillLevel === 1);
+      }
+      if (optHintBox) {
+        optHintBox.classList.add('hidden');
+      }
+
+      // Visual SVG mnemonic clue is shown in Level 1 (when enabled), hidden in Level 2 & Level 3
+      if (clueBox) {
+        const showGuidedClue = currentDrillLevel === 1 && state.showVisualClue;
+        clueBox.classList.toggle('hidden', !showGuidedClue);
+      }
+      if (clueSvg) clueSvg.innerHTML = buildVisualClueSVG(q.clue);
+      if (clueTxt) clueTxt.textContent = `Clue: ${q.clue} (${q.tip})`;
+
+      if (appBox) appBox.classList.add('hidden');
+      if (statusMsg) statusMsg.classList.add('hidden');
+
+      const allCandidates = getAllCurriculumItemsWithMeta().filter(it => it.id !== q.id);
+      const distractors = [];
+      const offset = (drillIndex * 7 + currentDrillLevel * 3 + (activeLessonDayObj?.day || 1)) % Math.max(1, allCandidates.length);
+      for (let i = 0; i < allCandidates.length && distractors.length < 2; i++) {
+        const cand = allCandidates[(offset + i) % allCandidates.length];
+        if (!distractors.some(d => d.meaning === cand.meaning) && cand.meaning !== q.meaning) {
+          distractors.push(cand);
+        }
+      }
+
+      const options = [q, ...distractors].sort((a, b) => {
+        const ka = `${a.id}_${drillIndex}_${currentDrillLevel}`;
+        const kb = `${b.id}_${drillIndex}_${currentDrillLevel}`;
+        return ka.localeCompare(kb);
+      });
+
+      if (choicesWrap) {
+        choicesWrap.innerHTML = options.map(opt => {
+          const isCorrect = opt.id === q.id;
+          return `
+            <button type="button" onclick="handleDrillChoice(${isCorrect}, '${encodeURIComponent(q.meaning)}', '${encodeURIComponent(opt.meaning)}', '${q.id}')" class="w-full text-left px-3.5 py-2.5 rounded-2xl bg-washi hover:bg-stone-100 border border-stone-200/90 text-xs font-extrabold text-sumi flex items-center justify-between gap-2 btn-press">
+              <span>${opt.meaning}</span>
+              <span class="text-[10px] font-bold text-stone-400">${currentDrillLevel === 1 ? opt.romaji : ''}</span>
+            </button>
+          `;
+        }).join('');
+      }
+    }
+
+    function triggerDrillBurst(text) {
+      const burst = document.getElementById('drill-burst');
+      const label = document.getElementById('drill-burst-label');
+      if (!burst || !label) return;
+      label.textContent = text;
+      burst.classList.remove('hidden');
+      burst.classList.remove('anim-burst');
+      void burst.offsetWidth;
+      burst.classList.add('anim-burst');
+      setTimeout(() => burst.classList.add('hidden'), 860);
+    }
+
+    function handleDrillChoice(isCorrect, encodedTargetMeaning, encodedPickedMeaning, itemId) {
+      if (drillLocked) return;
+      drillLocked = true;
+
+      const targetMeaning = decodeURIComponent(encodedTargetMeaning);
+      const pickedMeaning = decodeURIComponent(encodedPickedMeaning);
+
+      levelStats[currentDrillLevel].total += 1;
+      const statusMsg = document.getElementById('drill-status-msg');
+      const appBox = document.getElementById('drill-appreciation-box');
+      const appTitle = document.getElementById('drill-appreciation-title');
+      const appMeta = document.getElementById('drill-appreciation-meta');
+      const streakBadge = document.getElementById('drill-streak-badge');
+      const drillCard = document.getElementById('lesson-drill-phase');
+
+      if (isCorrect) {
+        levelStats[currentDrillLevel].correct += 1;
+        drillStreak += 1;
+        clearWeakItem(itemId);
+        const xpEarned = addXP(currentDrillLevel * 10);
+        triggerDrillBurst(`+${xpEarned} XP • Subarashii!`);
+
+        if (appBox) appBox.classList.remove('hidden');
+        if (appTitle) {
+          appTitle.textContent = drillStreak >= 3 ? `Yatta! ${drillStreak}-in-a-row!` : 'Subarashii! Correct';
+        }
+        const st = levelStats[currentDrillLevel];
+        const acc = Math.round((st.correct / st.total) * 100);
+        if (appMeta) appMeta.textContent = `Level ${currentDrillLevel} accuracy: ${acc}% • +${xpEarned} XP`;
+        if (streakBadge) streakBadge.textContent = `🔥 ${drillStreak} Streak`;
+        if (statusMsg) statusMsg.classList.add('hidden');
+      } else {
+        drillStreak = 0;
+        recordWeakItem(itemId);
+        if (appBox) appBox.classList.add('hidden');
+        if (drillCard) {
+          drillCard.classList.remove('anim-shake');
+          void drillCard.offsetWidth;
+          drillCard.classList.add('anim-shake');
+        }
+        if (statusMsg) {
+          statusMsg.className = 'mt-2.5 text-xs font-extrabold px-3 py-2 rounded-xl text-center bg-sakuraLight text-sakuraDark anim-pop';
+          statusMsg.textContent = `Picked "${pickedMeaning}" — Answer: "${targetMeaning}" (added to Revision)`;
+          statusMsg.classList.remove('hidden');
+        }
+      }
+
+      updateLevelStepperUI();
+
+      setTimeout(() => {
+        if (drillIndex < drillQueue.length - 1) {
+          drillIndex += 1;
+          renderDrillQuestion();
+        } else {
+          finishCurrentDrillLevel();
+        }
+      }, 900);
+    }
+
+    function finishCurrentDrillLevel() {
+      if (currentDrillLevel < 3) {
+        const nextLvl = currentDrillLevel + 1;
+        showToast(`Level ${currentDrillLevel} complete → Level ${nextLvl}!`);
+        startDrillLevel(nextLvl);
+        return;
+      }
+
+      // Level 3 Mastery Gate (>= 75% required)
+      const st3 = levelStats[3];
+      const gatePct = st3.total > 0 ? Math.round((st3.correct / st3.total) * 100) : 0;
+      const passed = gatePct >= 75;
+
+      const acc1 = levelStats[1].total > 0 ? Math.round((levelStats[1].correct / levelStats[1].total) * 100) : 100;
+      const acc2 = levelStats[2].total > 0 ? Math.round((levelStats[2].correct / levelStats[2].total) * 100) : 100;
+
+      const s1 = document.getElementById('sum-acc-1');
+      const s2 = document.getElementById('sum-acc-2');
+      const s3 = document.getElementById('sum-acc-3');
+      const icon = document.getElementById('summary-icon');
+      const heading = document.getElementById('summary-heading');
+      const detail = document.getElementById('summary-detail');
+      const primaryBtn = document.getElementById('btn-summary-primary');
+
+      if (s1) s1.textContent = `${acc1}%`;
+      if (s2) s2.textContent = `${acc2}%`;
+      if (s3) s3.textContent = `${gatePct}%`;
+
+      if (passed) {
+        if (activeLessonDayObj && typeof activeLessonDayObj.day === 'number' && !state.completedDays.includes(activeLessonDayObj.day)) {
+          state.completedDays.push(activeLessonDayObj.day);
+          saveStateSafely();
+        }
+        const bonus = addXP(40);
+        if (icon) {
+          icon.className = 'w-14 h-14 mx-auto rounded-2xl bg-matchaLight text-matcha flex items-center justify-center text-2xl font-black';
+          icon.textContent = '★';
+        }
+        if (heading) heading.textContent = `Day ${activeLessonDayObj?.day || ''} Gate Cleared!`;
+        if (detail) detail.textContent = `Level 3 accuracy reached ${gatePct}% (≥75% required). Earned +${bonus} mastery bonus XP!`;
+        if (primaryBtn) primaryBtn.textContent = 'Continue 14-Day Roadmap →';
+      } else {
+        if (icon) {
+          icon.className = 'w-14 h-14 mx-auto rounded-2xl bg-yuzuLight text-amber-800 flex items-center justify-center text-2xl font-black';
+          icon.textContent = '↺';
+        }
+        if (heading) heading.textContent = `Mastery Gate: ${gatePct}%`;
+        if (detail) detail.textContent = `Score at least 75% on Level 3 to clear the gate. Missed items were added to Revision.`;
+        if (primaryBtn) primaryBtn.textContent = 'Back to Roadmap';
+      }
+
+      updateHeaderUI();
+      showLessonStage('summary');
+    }
+
+    function continueToNextDayOrRoadmap() {
+      const nextNum = getNextIncompleteDayNumber();
+      exitLessonToRoadmap();
+      openSprintDay(nextNum);
+    }
+
+    /**
+     * =========================================================================
+     * 9. TAB 2: 3D FLASHCARDS (Deck Filter + Visual Clue + Stroke + Audio)
+     * =========================================================================
+     */
+    let flashcardDeckList = [];
+    let flashcardIndex = 0;
+    let flashcardFlipped = false;
+    let flashcardStrokeOn = false;
+    let flashcardGotItStreak = 0;
+
+    function buildFlashcardDecks() {
+      const allItems = getAllCurriculumItemsWithMeta();
+      const decks = [
+        { id: 'all', label: `All N5 Cards (${allItems.length})`, items: allItems },
+        { id: 'hiragana', label: 'Hiragana & Basics (Days 1–3)', items: allItems.filter(i => i.category === 'hiragana') },
+        { id: 'katakana', label: 'Katakana & Loanwords (Days 4–5)', items: allItems.filter(i => i.category === 'katakana') },
+        { id: 'phrases', label: 'Particles, Verbs & Phrases (Days 6–14)', items: allItems.filter(i => i.category === 'phrases') },
+        { id: 'weak', label: `Due Revision (${state.weakItemIds.length})`, items: allItems.filter(i => state.weakItemIds.includes(i.id)) },
+        ...SYLLABUS_DAYS.map(d => ({
+          id: `day_${d.day}`,
+          label: `Day ${d.day}: ${d.title}`,
+          items: allItems.filter(i => i.day === d.day)
+        }))
+      ];
+
+      const sel = document.getElementById('card-deck-select');
+      const currentVal = sel ? sel.value : 'all';
+      if (sel) {
+        sel.innerHTML = decks.map(d => `<option value="${d.id}">${d.label}</option>`).join('');
+        sel.value = decks.some(d => d.id === currentVal) ? currentVal : 'all';
+      }
+
+      const selectedDeck = decks.find(d => d.id === (sel ? sel.value : 'all')) || decks[0];
+      flashcardDeckList = selectedDeck.items.length > 0 ? selectedDeck.items : allItems;
+      if (flashcardIndex >= flashcardDeckList.length) flashcardIndex = 0;
+    }
+
+    function changeFlashcardDeck() {
+      flashcardIndex = 0;
+      flashcardFlipped = false;
+      const inner = document.getElementById('fc-3d-inner');
+      if (inner) inner.classList.remove('is-flipped');
+      buildFlashcardDecks();
+      renderFlashcard();
+    }
+
+    function flipFlashcard() {
+      flashcardFlipped = !flashcardFlipped;
+      const inner = document.getElementById('fc-3d-inner');
+      if (inner) inner.classList.toggle('is-flipped', flashcardFlipped);
+    }
+
+    function toggleRomajiCards() {
+      state.showRomaji = !state.showRomaji;
+      saveStateSafely();
+      renderFlashcard();
+      showToast(state.showRomaji ? 'Romaji hints ON' : 'Romaji hints OFF');
+    }
+
+    function toggleFlashcardStroke() {
+      flashcardStrokeOn = !flashcardStrokeOn;
+      renderFlashcard();
+    }
+
+    function speakCurrentFlashcard() {
+      const card = flashcardDeckList[flashcardIndex];
+      if (card) KanaAudio.speak(card.jp);
+    }
+
+    function triggerFlashcardBurst(text) {
+      const burst = document.getElementById('fc-burst');
+      const lbl = document.getElementById('fc-burst-label');
+      if (!burst || !lbl) return;
+      lbl.textContent = text;
+      burst.classList.remove('hidden');
+      burst.classList.remove('anim-burst');
+      void burst.offsetWidth;
+      burst.classList.add('anim-burst');
+      setTimeout(() => burst.classList.add('hidden'), 850);
+    }
+
+    function markCurrentFlashcard(status) {
+      const card = flashcardDeckList[flashcardIndex];
+      if (!card) return;
+
+      const appBox = document.getElementById('fc-appreciation-box');
+      const appMsg = document.getElementById('fc-appreciation-msg');
+      const streakEl = document.getElementById('fc-mastery-streak');
+
+      if (status === 'review') {
+        flashcardGotItStreak = 0;
+        recordWeakItem(card.id);
+        if (appBox) appBox.classList.add('hidden');
+        showToast(`Queued "${card.jp}" for revision`);
+      } else {
+        flashcardGotItStreak += 1;
+        clearWeakItem(card.id);
+        const gained = addXP(5);
+        triggerFlashcardBurst(`+${gained} XP • Oboeta!`);
+        if (appBox) appBox.classList.remove('hidden');
+        if (appMsg) appMsg.textContent = `Subarashii! "${card.jp}" mastered (+${gained} XP)`;
+        if (streakEl) streakEl.textContent = `🔥 ${flashcardGotItStreak}`;
+        nextFlashcard();
+      }
+    }
+
+    function prevFlashcard() {
+      if (!flashcardDeckList.length) return;
+      flashcardFlipped = false;
+      const inner = document.getElementById('fc-3d-inner');
+      if (inner) inner.classList.remove('is-flipped');
+      flashcardIndex = (flashcardIndex - 1 + flashcardDeckList.length) % flashcardDeckList.length;
+      renderFlashcard();
+    }
+
+    function nextFlashcard() {
+      if (!flashcardDeckList.length) return;
+      flashcardFlipped = false;
+      const inner = document.getElementById('fc-3d-inner');
+      if (inner) inner.classList.remove('is-flipped');
+      flashcardIndex = (flashcardIndex + 1) % flashcardDeckList.length;
+      renderFlashcard();
+    }
+
+    function renderFlashcard() {
+      buildFlashcardDecks();
+      const card = flashcardDeckList[flashcardIndex];
+      if (!card) return;
+
+      const dayTag = document.getElementById('fc-day-tag');
+      const jpEl = document.getElementById('fc-jp');
+      const backJpEl = document.getElementById('fc-back-jp');
+      const romEl = document.getElementById('fc-romaji');
+      const backRomEl = document.getElementById('fc-back-romaji');
+      const meanEl = document.getElementById('fc-meaning');
+      const tipEl = document.getElementById('fc-tip');
+      const idxLbl = document.getElementById('fc-index-label');
+      const romBtn = document.getElementById('btn-toggle-romaji');
+      const strokeSvg = document.getElementById('fc-stroke-svg');
+      const strokeBtn = document.getElementById('btn-fc-stroke');
+      const clueWrap = document.getElementById('fc-visual-clue-wrap');
+      const clueSvg = document.getElementById('fc-clue-svg');
+      const clueLbl = document.getElementById('fc-clue-label');
+
+      if (dayTag) dayTag.textContent = `DAY ${card.day}`;
+      if (jpEl) jpEl.textContent = card.jp;
+      if (backJpEl) backJpEl.textContent = card.jp;
+      if (meanEl) meanEl.textContent = card.meaning;
+      if (tipEl) tipEl.textContent = card.tip;
+      if (idxLbl) idxLbl.textContent = `${flashcardIndex + 1} / ${flashcardDeckList.length}`;
+
+      if (romEl) {
+        romEl.textContent = card.romaji;
+        romEl.classList.toggle('hidden', !state.showRomaji);
+      }
+      if (backRomEl) {
+        backRomEl.textContent = `Romaji: ${card.romaji}`;
+      }
+      if (romBtn) {
+        romBtn.textContent = state.showRomaji ? 'Romaji: ON' : 'Romaji: OFF';
+      }
+
+      if (strokeSvg) strokeSvg.classList.toggle('hidden', !flashcardStrokeOn);
+      if (strokeBtn) {
+        strokeBtn.className = flashcardStrokeOn
+          ? 'px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-indigoInk text-white btn-press'
+          : 'px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-stone-100 hover:bg-stone-200 text-indigoInk btn-press';
+      }
+
+      if (clueWrap) clueWrap.classList.toggle('hidden', !state.showVisualClue);
+      if (clueSvg) clueSvg.innerHTML = buildVisualClueSVG(card.clue);
+      if (clueLbl) clueLbl.textContent = `${card.clue.toUpperCase()} anchor — ${card.tip}`;
+
+      updateClueToggleButtons();
+    }
+
+    /**
+     * =========================================================================
+     * 10. TAB 3: 60-SECOND BLITZ QUIZ (Deck Selection + Clue + Celebration)
+     * =========================================================================
+     */
+    let blitzTimerId = null;
+    let blitzSeconds = 60;
+    let blitzScore = 0;
+    let blitzCombo = 1;
+    let blitzStreakCount = 0;
+    let blitzAnsweredCount = 0;
+    let blitzCorrectCount = 0;
+    let blitzQuestionCount = 0;
+    let blitzCurrentItem = null;
+    let blitzLocked = false;
+    let blitzClueUsedForQuestion = false;
+
+    function setBlitzDeck(deckId) {
+      if (['mixed', 'hiragana', 'katakana', 'phrases'].includes(deckId)) {
+        state.blitzDeck = deckId;
+        saveStateSafely();
+      }
+    }
+
+    function getBlitzDeckPool() {
+      const all = getAllCurriculumItemsWithMeta();
+      if (state.blitzDeck === 'hiragana') return all.filter(i => i.category === 'hiragana');
+      if (state.blitzDeck === 'katakana') return all.filter(i => i.category === 'katakana');
+      if (state.blitzDeck === 'phrases') return all.filter(i => i.category === 'phrases');
+      return all;
+    }
+
+    function updateBlitzLobbyUI() {
+      const bestS = document.getElementById('blitz-best-score-val');
+      const bestC = document.getElementById('blitz-best-combo-val');
+      const deckSel = document.getElementById('blitz-deck-select');
+      if (bestS) bestS.textContent = String(state.blitzBestScore);
+      if (bestC) bestC.textContent = `${state.blitzBestCombo}x`;
+      if (deckSel) deckSel.value = state.blitzDeck || 'mixed';
+    }
+
+    function startBlitzGame() {
+      blitzSeconds = 60;
+      blitzScore = 0;
+      blitzCombo = 1;
+      blitzStreakCount = 0;
+      blitzAnsweredCount = 0;
+      blitzCorrectCount = 0;
+      blitzQuestionCount = 0;
+      blitzLocked = false;
+
+      document.getElementById('blitz-lobby')?.classList.add('hidden');
+      document.getElementById('blitz-results-card')?.classList.add('hidden');
+      document.getElementById('blitz-arena')?.classList.remove('hidden');
+
+      updateBlitzHUD();
+      nextBlitzQuestion();
+
+      if (blitzTimerId) clearInterval(blitzTimerId);
+      blitzTimerId = setInterval(() => {
+        blitzSeconds -= 1;
+        updateBlitzHUD();
+        if (blitzSeconds <= 0) {
+          endBlitzRound();
+        }
+      }, 1000);
+    }
+
+    function updateBlitzHUD() {
+      const tEl = document.getElementById('blitz-time-left');
+      const cEl = document.getElementById('blitz-combo-badge');
+      const sEl = document.getElementById('blitz-score-val');
+      if (tEl) tEl.textContent = `${Math.max(0, blitzSeconds)}s`;
+      if (cEl) cEl.textContent = `${blitzCombo}x`;
+      if (sEl) sEl.textContent = String(blitzScore);
+    }
+
+    function speakBlitzPrompt() {
+      if (blitzCurrentItem) KanaAudio.speak(blitzCurrentItem.jp);
+    }
+
+    function useBlitzVisualClue() {
+      if (!blitzCurrentItem || blitzClueUsedForQuestion || blitzLocked) return;
+      blitzClueUsedForQuestion = true;
+      blitzScore = Math.max(0, blitzScore - 5);
+      updateBlitzHUD();
+
+      const panel = document.getElementById('blitz-clue-panel');
+      const svgEl = document.getElementById('blitz-clue-svg');
+      const descEl = document.getElementById('blitz-clue-desc');
+      if (svgEl) svgEl.innerHTML = buildVisualClueSVG(blitzCurrentItem.clue);
+      if (descEl) descEl.textContent = `${blitzCurrentItem.clue.toUpperCase()} clue: ${blitzCurrentItem.tip}`;
+      if (panel) panel.classList.remove('hidden');
+    }
+
+    function nextBlitzQuestion() {
+      blitzLocked = false;
+      blitzClueUsedForQuestion = false;
+      blitzQuestionCount += 1;
+
+      const pool = getBlitzDeckPool();
+      const idx = (blitzQuestionCount * 5 + blitzScore + blitzStreakCount) % pool.length;
+      blitzCurrentItem = pool[idx];
+
+      const panel = document.getElementById('blitz-clue-panel');
+      const appBar = document.getElementById('blitz-appreciation-bar');
+      const counter = document.getElementById('blitz-q-counter');
+      const jpEl = document.getElementById('blitz-prompt-jp');
+      const grid = document.getElementById('blitz-options-grid');
+
+      if (panel) panel.classList.add('hidden');
+      if (appBar) appBar.classList.add('hidden');
+      if (counter) counter.textContent = `Q${blitzQuestionCount} • Meaning`;
+      if (jpEl) jpEl.textContent = blitzCurrentItem.jp;
+
+      const allCandidates = getAllCurriculumItemsWithMeta().filter(x => x.id !== blitzCurrentItem.id);
+      const picks = [blitzCurrentItem];
+      for (let i = 0; i < allCandidates.length && picks.length < 4; i++) {
+        const cand = allCandidates[(idx + i * 3 + blitzQuestionCount) % allCandidates.length];
+        if (!picks.some(p => p.meaning === cand.meaning)) {
+          picks.push(cand);
+        }
+      }
+
+      const shuffled = picks.sort((a, b) => {
+        const ha = `${a.id}_${blitzQuestionCount}`;
+        const hb = `${b.id}_${blitzQuestionCount}`;
+        return ha.localeCompare(hb);
+      });
+
+      if (grid) {
+        grid.innerHTML = shuffled.map(opt => {
+          const right = opt.id === blitzCurrentItem.id;
+          return `
+            <button type="button" onclick="handleBlitzAnswer(${right}, '${encodeURIComponent(blitzCurrentItem.meaning)}', '${blitzCurrentItem.id}')" class="p-2.5 rounded-2xl bg-washi hover:bg-stone-100 border border-stone-200/90 text-[11px] font-extrabold text-sumi leading-snug min-h-[52px] flex items-center justify-center text-center btn-press">
+              ${opt.meaning}
+            </button>
+          `;
+        }).join('');
+      }
+    }
+
+    function triggerBlitzBurst(labelText) {
+      const burst = document.getElementById('blitz-burst');
+      const txt = document.getElementById('blitz-burst-text');
+      if (!burst || !txt) return;
+      txt.textContent = labelText;
+      burst.classList.remove('hidden');
+      burst.classList.remove('anim-burst');
+      void burst.offsetWidth;
+      burst.classList.add('anim-burst');
+      setTimeout(() => burst.classList.add('hidden'), 850);
+    }
+
+    function handleBlitzAnswer(isCorrect, encodedAnswer, itemId) {
+      if (blitzLocked) return;
+      blitzLocked = true;
+      blitzAnsweredCount += 1;
+
+      const card = document.getElementById('blitz-question-card');
+      const appBar = document.getElementById('blitz-appreciation-bar');
+      const appMsg = document.getElementById('blitz-appreciation-msg');
+      const milePill = document.getElementById('blitz-milestone-pill');
+
+      if (isCorrect) {
+        blitzCorrectCount += 1;
+        blitzStreakCount += 1;
+        blitzCombo = Math.min(4, 1 + Math.floor(blitzStreakCount / 2));
+        const pts = 10 * blitzCombo;
+        blitzScore += pts;
+        clearWeakItem(itemId);
+        triggerBlitzBurst(`+${pts} pts • ${blitzCombo}x!`);
+
+        if (appBar) appBar.classList.remove('hidden');
+        if (appMsg) appMsg.textContent = `Nice hit! +${pts} pts (${blitzCombo}x combo)`;
+        if (milePill) {
+          if (blitzStreakCount >= 10) milePill.textContent = '10-Hit Legend!';
+          else if (blitzStreakCount >= 5) milePill.textContent = '5-Hit Surge!';
+          else if (blitzStreakCount >= 3) milePill.textContent = '3-Hit Streak!';
+          else milePill.textContent = `${blitzStreakCount} Streak`;
+        }
+      } else {
+        blitzStreakCount = 0;
+        blitzCombo = 1;
+        recordWeakItem(itemId);
+        if (appBar) appBar.classList.add('hidden');
+        if (card) {
+          card.classList.remove('anim-shake');
+          void card.offsetWidth;
+          card.classList.add('anim-shake');
+        }
+        showToast(`Answer: ${decodeURIComponent(encodedAnswer)}`);
+      }
+
+      updateBlitzHUD();
+      setTimeout(() => {
+        if (blitzSeconds > 0) nextBlitzQuestion();
+      }, 420);
+    }
+
+    function endBlitzRound() {
+      if (blitzTimerId) {
+        clearInterval(blitzTimerId);
+        blitzTimerId = null;
+      }
+
+      if (blitzScore > state.blitzBestScore) state.blitzBestScore = blitzScore;
+      if (blitzCombo > state.blitzBestCombo) state.blitzBestCombo = blitzCombo;
+      const earnedXP = addXP(Math.max(10, Math.round(blitzScore / 4)));
+      saveStateSafely();
+      updateBlitzLobbyUI();
+
+      const acc = blitzAnsweredCount > 0 ? Math.round((blitzCorrectCount / blitzAnsweredCount) * 100) : 0;
+      document.getElementById('blitz-arena')?.classList.add('hidden');
+      document.getElementById('blitz-results-card')?.classList.remove('hidden');
+
+      const resScore = document.getElementById('blitz-res-score');
+      const resAcc = document.getElementById('blitz-res-acc');
+      const resXp = document.getElementById('blitz-res-xp');
+      const resSum = document.getElementById('blitz-result-summary');
+
+      if (resScore) resScore.textContent = String(blitzScore);
+      if (resAcc) resAcc.textContent = `${acc}%`;
+      if (resXp) resXp.textContent = `+${earnedXP}`;
+      if (resSum) {
+        resSum.textContent = `Answered ${blitzCorrectCount}/${blitzAnsweredCount} cleanly with top combo ${blitzCombo}x.`;
+      }
+    }
+
+    /**
+     * =========================================================================
+     * 11. TAB 4: KANA SOUNDBOARD (Hiragana & Katakana + Visual Clue Inspector)
+     * =========================================================================
+     */
+    let activeKanaScript = 'hiragana';
+    let inspectedKanaItem = HIRAGANA_CHART[0];
+
+    function switchKanaScript(scriptName) {
+      if (scriptName !== 'hiragana' && scriptName !== 'katakana') return;
+      activeKanaScript = scriptName;
+      const list = scriptName === 'hiragana' ? HIRAGANA_CHART : KATAKANA_CHART;
+      inspectedKanaItem = list[0];
+
+      const hBtn = document.getElementById('btn-script-hiragana');
+      const kBtn = document.getElementById('btn-script-katakana');
+      if (hBtn && kBtn) {
+        if (scriptName === 'hiragana') {
+          hBtn.className = 'py-2 rounded-xl text-xs font-black bg-indigoInk text-white btn-press';
+          kBtn.className = 'py-2 rounded-xl text-xs font-extrabold bg-stone-100 text-stone-600 btn-press';
+        } else {
+          kBtn.className = 'py-2 rounded-xl text-xs font-black bg-indigoInk text-white btn-press';
+          hBtn.className = 'py-2 rounded-xl text-xs font-extrabold bg-stone-100 text-stone-600 btn-press';
+        }
+      }
+
+      renderKanaSoundboard();
+      updateKanaInspector();
+    }
+
+    function updateKanaInspector() {
+      if (!inspectedKanaItem) return;
+      const svgBox = document.getElementById('kana-insp-svg-box');
+      const chEl = document.getElementById('kana-insp-char');
+      const romEl = document.getElementById('kana-insp-romaji');
+      const clueEl = document.getElementById('kana-insp-clue');
+
+      if (svgBox) svgBox.innerHTML = buildVisualClueSVG(inspectedKanaItem.clue);
+      if (chEl) chEl.textContent = inspectedKanaItem.jp;
+      if (romEl) romEl.textContent = inspectedKanaItem.romaji;
+      if (clueEl) clueEl.textContent = inspectedKanaItem.note;
+    }
+
+    function selectAndSpeakKana(idx) {
+      const list = activeKanaScript === 'hiragana' ? HIRAGANA_CHART : KATAKANA_CHART;
+      const item = list[idx];
+      if (!item) return;
+      inspectedKanaItem = item;
+      updateKanaInspector();
+      KanaAudio.speak(item.jp);
+    }
+
+    function speakInspectedKana() {
+      if (inspectedKanaItem) KanaAudio.speak(inspectedKanaItem.jp);
+    }
+
+    function renderKanaSoundboard() {
+      const grid = document.getElementById('kana-soundboard-grid');
+      if (!grid) return;
+      const list = activeKanaScript === 'hiragana' ? HIRAGANA_CHART : KATAKANA_CHART;
+      grid.innerHTML = list.map((item, idx) => {
+        const active = inspectedKanaItem && inspectedKanaItem.jp === item.jp;
+        return `
+          <button type="button" onclick="selectAndSpeakKana(${idx})" class="rounded-2xl p-2 text-center border transition-colors btn-press ${active ? 'bg-sakuraLight/80 border-sakura text-sumi' : 'bg-white hover:bg-stone-50 border-stone-200/80 text-sumi'}">
+            <div class="font-jp font-black text-xl leading-tight">${item.jp}</div>
+            <div class="text-[10px] font-extrabold text-sakura mt-0.5">${item.romaji}</div>
+          </button>
+        `;
+      }).join('');
+    }
+
+    /**
+     * =========================================================================
+     * 12. APP INITIALIZATION
+     * =========================================================================
+     */
+    function initKanaSprintApp() {
+      try {
+        loadStateSafely();
+        secondsRemaining = DURATION_CONFIG[state.durationKey]?.seconds || 300;
+        KanaAudio.init();
+        updateHeaderUI();
+        updateClueToggleButtons();
+        renderSprintRoadmap();
+        renderFlashcard();
+        updateBlitzLobbyUI();
+        renderKanaSoundboard();
+        updateKanaInspector();
+        startSprintCountdownLoop();
+      } catch (err) {
+        updateHeaderUI();
+        renderSprintRoadmap();
+      }
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initKanaSprintApp);
+    } else {
+      initKanaSprintApp();
+    }
+  </script>
+</body>
+</html>
