@@ -59,12 +59,19 @@
     .card-3d-inner {
       position: relative;
       width: 100%;
-      min-height: 310px;
+      height: 248px;
       transform-style: preserve-3d;
       transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
     }
     .card-3d-inner.is-flipped { transform: rotateY(180deg); }
-    .card-3d-face { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+    .card-3d-face {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
     .card-3d-back { transform: rotateY(180deg); }
     .btn-press { transition: transform 0.12s ease, background-color 0.15s ease; }
     .btn-press:active { transform: scale(0.97); }
@@ -136,12 +143,12 @@
     </header>
 
     <!-- MAIN WORKSPACE -->
-    <main class="flex-1 overflow-y-auto px-3.5 pt-3 pb-24 space-y-3.5">
+    <main class="flex-1 overflow-y-auto px-3.5 pt-2.5 pb-20 space-y-2.5">
 
       <!-- FRIENDLY JAPANESE GIRL AVATAR COMPANION ("Hana-chan") -->
-      <section aria-label="Hana Companion" onclick="pokeHanaAvatar()" class="bg-white rounded-3xl border border-sakura/25 shadow-card p-3 flex items-center gap-3 cursor-pointer btn-press">
-        <div id="hana-avatar-wrap" class="w-16 h-16 rounded-2xl bg-gradient-to-b from-sakuraLight to-rose-100 border border-sakura/30 flex items-center justify-center shrink-0 hana-bob overflow-hidden">
-          <svg id="hana-svg" class="w-15 h-15" viewBox="0 0 80 80" fill="none">
+      <section aria-label="Hana Companion" onclick="pokeHanaAvatar()" class="bg-white rounded-2xl border border-sakura/25 shadow-card p-2.5 flex items-center gap-2.5 cursor-pointer btn-press">
+        <div id="hana-avatar-wrap" class="w-12 h-12 rounded-xl bg-gradient-to-b from-sakuraLight to-rose-100 border border-sakura/30 flex items-center justify-center shrink-0 hana-bob overflow-hidden">
+          <svg id="hana-svg" class="w-11 h-11" viewBox="0 0 80 80" fill="none">
             <path d="M16 42 C14 58, 18 68, 24 70 L56 70 C62 68, 66 58, 64 42 C64 22, 54 12, 40 12 C26 12, 16 22, 16 42 Z" fill="#1E1B18"/>
             <path d="M22 72 C24 62, 32 58, 40 58 C48 58, 56 62, 58 72 Z" fill="#E11D48"/>
             <path d="M33 59 L40 69 L47 59 Z" fill="#FFFFFF"/>
@@ -322,60 +329,73 @@
       </section>
 
       <!-- =================================================================== -->
-      <!-- TAB 2: 3D FLASHCARDS (ALL 3 LEVELS)                                 -->
+      <!-- TAB 2: 3D FLASHCARDS (IN-PLACE FLIP FOR ANSWER & RECALL CHECK)      -->
       <!-- =================================================================== -->
-      <section id="tab-cards" class="hidden space-y-3.5 anim-pop">
-        <div class="bg-white rounded-2xl border border-stone-200/80 p-3 shadow-card space-y-2">
-          <div class="flex items-center justify-between">
-            <label for="card-deck-select" class="text-xs font-black text-indigoInk">Choose Level / Deck</label>
-            <button type="button" id="btn-toggle-romaji" onclick="toggleRomajiCards()" class="px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-soraLight text-sora btn-press">Romaji: ON</button>
-          </div>
-          <select id="card-deck-select" onchange="changeFlashcardDeck()" class="w-full rounded-xl border border-stone-200 bg-washi px-3 py-2 text-xs font-extrabold text-sumi">
+      <section id="tab-cards" class="hidden space-y-2.5 anim-pop">
+        <div class="bg-white rounded-2xl border border-stone-200/80 px-2.5 py-2 shadow-card flex items-center gap-2">
+          <select id="card-deck-select" aria-label="Choose Level or Deck" onchange="changeFlashcardDeck()" class="flex-1 min-w-0 rounded-xl border border-stone-200 bg-washi px-2.5 py-1.5 text-xs font-extrabold text-sumi">
             <option value="all">All Levels (168 Cards)</option>
             <option value="tier1">Level 1: Easy (56 Cards)</option>
             <option value="tier2">Level 2: Medium (56 Cards)</option>
             <option value="tier3">Level 3: Hard (56 Cards)</option>
             <option value="weak">Due Revision Items</option>
           </select>
+          <button type="button" id="btn-toggle-romaji" onclick="toggleRomajiCards()" class="shrink-0 px-2.5 py-1.5 rounded-xl text-[11px] font-extrabold bg-soraLight text-sora btn-press">Romaji: ON</button>
         </div>
 
         <div class="perspective-1000">
-          <div id="fc-3d-inner" onclick="flipFlashcard()" class="card-3d-inner cursor-pointer">
-            <div class="card-3d-face bg-white rounded-3xl border border-stone-200/80 shadow-card p-5 flex flex-col justify-between min-h-[310px]">
+          <div id="fc-3d-inner" onclick="handleFlashcardSurfaceClick()" class="card-3d-inner cursor-pointer">
+            <!-- FRONT FACE: QUERY CARD -->
+            <div class="card-3d-face bg-white rounded-3xl border border-stone-200/80 shadow-card p-4 flex flex-col justify-between">
               <div class="flex items-center justify-between">
                 <span id="fc-day-tag" class="px-2.5 py-0.5 rounded-full bg-sakuraLight text-sakuraDark text-[10px] font-black">LEVEL 1</span>
                 <button type="button" onclick="event.stopPropagation(); speakCurrentFlashcard()" class="px-3 py-1 rounded-full bg-sakuraLight text-sakuraDark text-xs font-extrabold btn-press">🔊 Speak</button>
               </div>
-              <div class="my-auto text-center py-4">
-                <div id="fc-jp" class="font-jp font-black text-4xl text-sumi">あ</div>
-                <div id="fc-romaji" class="mt-2 text-base font-extrabold text-sakura">a</div>
+              <div class="my-auto text-center py-1">
+                <div id="fc-jp" class="font-jp font-black text-4xl text-sumi leading-tight">あ</div>
+                <div id="fc-romaji" class="mt-1.5 text-sm font-extrabold text-sakura">a</div>
               </div>
-              <p class="text-center text-[11px] font-bold text-stone-400">Tap card to flip for meaning &amp; Hana's note →</p>
+              <p class="text-center text-[11px] font-bold text-stone-400">Tap card to flip answer · Or tap Recall Check below</p>
             </div>
-            <div class="card-3d-face card-3d-back bg-gradient-to-br from-indigoInk to-slate-800 text-white rounded-3xl shadow-card p-5 flex flex-col justify-between min-h-[310px]">
-              <div class="flex items-center justify-between">
-                <span class="px-2.5 py-0.5 rounded-full bg-white/15 text-yuzu text-[10px] font-black">MEANING &amp; TIP</span>
-                <span id="fc-back-jp" class="font-jp font-black text-lg">あ</span>
+
+            <!-- BACK FACE: FLIPS DIRECTLY OVER THE QUERY CARD (ANSWER OR RECALL CHECK) -->
+            <div class="card-3d-face card-3d-back bg-gradient-to-br from-indigoInk to-slate-800 text-white rounded-3xl shadow-card p-4 flex flex-col justify-between">
+              <!-- Mode A: Standard Answer & Tip -->
+              <div id="fc-back-meaning-view" class="h-full flex flex-col justify-between">
+                <div class="flex items-center justify-between">
+                  <span class="px-2.5 py-0.5 rounded-full bg-white/15 text-yuzu text-[10px] font-black">MEANING &amp; TIP</span>
+                  <span id="fc-back-jp" class="font-jp font-black text-base">あ</span>
+                </div>
+                <div class="my-auto text-center space-y-1.5 py-1">
+                  <div id="fc-meaning" class="text-lg font-black leading-snug">Vowel "a"</div>
+                  <div id="fc-back-romaji" class="text-xs font-extrabold text-yuzu">Romaji: a</div>
+                  <p id="fc-tip" class="text-xs text-stone-200 bg-white/10 rounded-2xl px-3 py-2 line-clamp-2">Tip</p>
+                </div>
+                <p class="text-center text-[11px] font-bold text-stone-300">Tap card to flip back to query</p>
               </div>
-              <div class="my-auto text-center space-y-2 py-3">
-                <div id="fc-meaning" class="text-xl font-black">Vowel "a"</div>
-                <div id="fc-back-romaji" class="text-xs font-extrabold text-yuzu">Romaji: a</div>
-                <p id="fc-tip" class="text-xs text-stone-200 bg-white/10 rounded-2xl p-3">Tip</p>
+
+              <!-- Mode B: In-Place Recall Check Quiz (Flips directly over the query card!) -->
+              <div id="fc-back-recall-view" onclick="event.stopPropagation()" class="hidden h-full flex flex-col justify-between cursor-default">
+                <div class="flex items-center justify-between gap-2">
+                  <span id="fc-recall-prompt" class="text-[11px] font-black text-yuzu truncate">Verify: What does this mean?</span>
+                  <button type="button" onclick="cancelCardRecallCheck()" class="shrink-0 px-2 py-0.5 rounded-full bg-white/15 text-[10px] font-extrabold text-stone-200 hover:bg-white/25">✕ Back</button>
+                </div>
+                <div id="fc-recall-options" class="grid grid-cols-1 gap-1.5 my-auto py-1"></div>
+                <p id="fc-recall-feedback" class="text-center text-[11px] font-extrabold text-stone-300">Pick the matching option to earn +5 XP</p>
               </div>
-              <p class="text-center text-[11px] font-bold text-stone-300">Tap card to flip back</p>
             </div>
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-2.5">
-          <button type="button" onclick="markCurrentFlashcard('review')" class="py-2.5 rounded-2xl bg-soraLight text-sora font-extrabold text-xs btn-press">↺ Needs Review</button>
-          <button type="button" onclick="markCurrentFlashcard('gotit')" class="py-2.5 rounded-2xl bg-matchaLight text-matchaDark font-extrabold text-xs btn-press">✓ Got It (+5 XP)</button>
+        <div id="fc-action-bar" class="grid grid-cols-2 gap-2">
+          <button type="button" onclick="markCurrentFlashcard('review')" class="py-2 rounded-2xl bg-soraLight text-sora font-extrabold text-xs btn-press">↺ Needs Review</button>
+          <button type="button" onclick="startCardRecallCheck()" class="py-2 rounded-2xl bg-matchaLight text-matchaDark font-extrabold text-xs btn-press">🧠 Recall Check (+5 XP)</button>
         </div>
 
         <div class="flex items-center justify-between gap-2">
-          <button type="button" onclick="prevFlashcard()" class="flex-1 py-3 rounded-2xl bg-white border border-stone-200 text-indigoInk font-extrabold text-xs btn-press">← Prev</button>
+          <button type="button" onclick="prevFlashcard()" class="flex-1 py-2.5 rounded-2xl bg-white border border-stone-200 text-indigoInk font-extrabold text-xs btn-press">← Prev</button>
           <span id="fc-index-label" class="px-3 text-xs font-black text-stone-500 tabular-nums">1 / 168</span>
-          <button type="button" onclick="nextFlashcard()" class="flex-1 py-3 rounded-2xl bg-indigoInk text-white font-extrabold text-xs btn-press">Next →</button>
+          <button type="button" onclick="nextFlashcard()" class="flex-1 py-2.5 rounded-2xl bg-indigoInk text-white font-extrabold text-xs btn-press">Next →</button>
         </div>
       </section>
 
@@ -1257,6 +1277,15 @@
     let fcList = [];
     let fcIdx = 0;
     let fcFlipped = false;
+    let fcBackMode = 'meaning'; // 'meaning' | 'recall'
+
+    function setCardBackMode(mode) {
+      fcBackMode = mode;
+      const mView = document.getElementById('fc-back-meaning-view');
+      const rView = document.getElementById('fc-back-recall-view');
+      if (mView) mView.classList.toggle('hidden', mode !== 'meaning');
+      if (rView) rView.classList.toggle('hidden', mode !== 'recall');
+    }
 
     function changeFlashcardDeck() {
       const val = document.getElementById('card-deck-select').value;
@@ -1269,6 +1298,7 @@
       if (!fcList.length) fcList = all;
       fcIdx = 0;
       fcFlipped = false;
+      setCardBackMode('meaning');
       document.getElementById('fc-3d-inner').classList.remove('is-flipped');
       renderFlashcard();
     }
@@ -1286,9 +1316,21 @@
       document.getElementById('fc-index-label').textContent = `${fcIdx + 1} / ${fcList.length}`;
     }
 
-    function flipFlashcard() {
-      fcFlipped = !fcFlipped;
-      document.getElementById('fc-3d-inner').classList.toggle('is-flipped', fcFlipped);
+    function cancelCardRecallCheck() {
+      fcFlipped = false;
+      document.getElementById('fc-3d-inner').classList.remove('is-flipped');
+      setTimeout(() => setCardBackMode('meaning'), 220);
+    }
+
+    function handleFlashcardSurfaceClick() {
+      if (!fcFlipped) {
+        setCardBackMode('meaning');
+        fcFlipped = true;
+        document.getElementById('fc-3d-inner').classList.add('is-flipped');
+      } else if (fcBackMode === 'meaning') {
+        fcFlipped = false;
+        document.getElementById('fc-3d-inner').classList.remove('is-flipped');
+      }
     }
 
     function toggleRomajiCards() {
@@ -1299,22 +1341,89 @@
     }
 
     function speakCurrentFlashcard() { KanaAudio.speak(fcList[fcIdx].jp); }
-    function prevFlashcard() { fcFlipped = false; document.getElementById('fc-3d-inner').classList.remove('is-flipped'); fcIdx = (fcIdx - 1 + fcList.length) % fcList.length; renderFlashcard(); }
-    function nextFlashcard() { fcFlipped = false; document.getElementById('fc-3d-inner').classList.remove('is-flipped'); fcIdx = (fcIdx + 1) % fcList.length; renderFlashcard(); }
+    function prevFlashcard() {
+      fcFlipped = false;
+      document.getElementById('fc-3d-inner').classList.remove('is-flipped');
+      setTimeout(() => setCardBackMode('meaning'), 180);
+      fcIdx = (fcIdx - 1 + fcList.length) % fcList.length;
+      renderFlashcard();
+    }
+    function nextFlashcard() {
+      fcFlipped = false;
+      document.getElementById('fc-3d-inner').classList.remove('is-flipped');
+      setTimeout(() => setCardBackMode('meaning'), 180);
+      fcIdx = (fcIdx + 1) % fcList.length;
+      renderFlashcard();
+    }
+
+    function startCardRecallCheck() {
+      const c = fcList[fcIdx];
+      if (!c) return;
+      const fb = document.getElementById('fc-recall-feedback');
+      const promptEl = document.getElementById('fc-recall-prompt');
+      const optsEl = document.getElementById('fc-recall-options');
+
+      const askForJp = Math.random() < 0.45;
+      const all = getAllItemsAcrossTiers().filter(x => x.id !== c.id).sort(() => Math.random() - 0.5);
+      const choices = [c, ...all.slice(0, 2)].sort(() => Math.random() - 0.5);
+
+      fb.className = 'text-center text-[11px] font-extrabold text-stone-300';
+      fb.textContent = 'Pick the matching option to earn +5 XP';
+
+      if (askForJp) {
+        promptEl.textContent = `Match: "${c.meaning}"`;
+        optsEl.innerHTML = choices.map(opt => `
+          <button type="button" onclick="verifyCardRecall(${opt.id === c.id}, '${encodeURIComponent(c.jp)}')" class="w-full text-left px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 font-jp text-sm font-black text-white btn-press">
+            ${opt.jp}
+          </button>
+        `).join('');
+      } else {
+        promptEl.textContent = `Meaning of "${c.jp}"?`;
+        optsEl.innerHTML = choices.map(opt => `
+          <button type="button" onclick="verifyCardRecall(${opt.id === c.id}, '${encodeURIComponent(c.meaning)}')" class="w-full text-left px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-xs font-extrabold text-white btn-press">
+            ${opt.meaning}
+          </button>
+        `).join('');
+      }
+
+      setCardBackMode('recall');
+      fcFlipped = true;
+      document.getElementById('fc-3d-inner').classList.add('is-flipped');
+    }
+
+    function verifyCardRecall(passed, encodedExpected) {
+      const c = fcList[fcIdx];
+      const fb = document.getElementById('fc-recall-feedback');
+      if (passed) {
+        state.weakItemIds = state.weakItemIds.filter(id => id !== c.id);
+        state.xp += 5;
+        saveState();
+        updateHeaderUI();
+        fb.className = 'text-center text-[11px] font-black text-emerald-300';
+        fb.textContent = `✓ Verified! +5 XP`;
+        setHanaMood('cheer', `Hontō! You proved you know "${c.jp}" (+5 XP)!`);
+        setTimeout(() => {
+          nextFlashcard();
+        }, 650);
+      } else {
+        if (!state.weakItemIds.includes(c.id)) state.weakItemIds.push(c.id);
+        saveState();
+        updateHeaderUI();
+        fb.className = 'text-center text-[11px] font-extrabold text-rose-300';
+        fb.textContent = `Answer: "${decodeURIComponent(encodedExpected)}" · Added to Rev`;
+        setHanaMood('encourage', `Good catch! I put "${c.jp}" in Revision so you can practice it again.`);
+      }
+    }
 
     function markCurrentFlashcard(type) {
       const c = fcList[fcIdx];
       if (type === 'review') {
         if (!state.weakItemIds.includes(c.id)) state.weakItemIds.push(c.id);
         setHanaMood('encourage', `Saved "${c.jp}" to Revision so we can practice it again!`);
-      } else {
-        state.weakItemIds = state.weakItemIds.filter(id => id !== c.id);
-        state.xp += 5;
-        setHanaMood('cheer', `Oboeta! "${c.jp}" mastered (+5 XP)!`);
+        saveState();
+        updateHeaderUI();
+        nextFlashcard();
       }
-      saveState();
-      updateHeaderUI();
-      nextFlashcard();
     }
 
     let blitzTimer = null, blitzSec = 60, blitzScore = 0, blitzCombo = 1, blitzItem = null;
